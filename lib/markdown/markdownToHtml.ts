@@ -3,15 +3,15 @@ import { marked } from "marked";
 const renderer = new marked.Renderer();
 
 /* ---------------- HEADINGS ---------------- */
-renderer.heading = ({ tokens, depth }) => {
-  const text = tokens.map((t) => t.raw).join("");
-  const slug = text
-    .toLowerCase()
-    .replace(/[^\w]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+// renderer.heading = ({ tokens, depth }) => {
+//   const text = tokens.map((t) => t.raw).join("");
+//   const slug = text
+//     .toLowerCase()
+//     .replace(/[^\w]+/g, "-")
+//     .replace(/(^-|-$)/g, "");
 
-  return `<h${depth} id="${slug}" class="scroll-mt-24">${text}</h${depth}>`;
-};
+//   return `<h${depth} id="${slug}" class="scroll-mt-24">${text}</h${depth}>`;
+// };
 
 /* ---------------- PARAGRAPH ---------------- */
 renderer.paragraph = ({ tokens }) => {
