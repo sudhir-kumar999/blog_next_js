@@ -1,11 +1,10 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 
-export async function POST() {
-  const cookieStore = await cookies(); // 🔥 await REQUIRED
+export async function logout() {
+  await supabaseBrowser.auth.signOut(); // ✅ clears localStorage
 
-  cookieStore.delete("sb-access-token");
-  cookieStore.delete("sb-refresh-token");
+  // optional but safe
+  localStorage.removeItem("supabase.auth.token");
 
-  return NextResponse.json({ success: true });
+  window.location.href = "/"; // or /auth/login
 }
