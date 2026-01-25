@@ -1,10 +1,22 @@
+"use client";
+
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { useRouter } from "next/navigation";
 
-export async function logout() {
-  await supabaseBrowser.auth.signOut(); // ✅ clears localStorage
+export async function logout(router?: ReturnType<typeof useRouter>) {
+  await supabaseBrowser.auth.signOut();
 
-  // optional but safe
-  localStorage.removeItem("supabase.auth.token");
+  // Supabase already clears sb-* keys
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith("sb-")) {
+      localStorage.removeItem(key);
+    }
+  });
 
-  window.location.href = "/"; // or /auth/login
+  if (router) {
+    router.replace("/");
+    router.refresh(); // 🔥 important for server components
+  } else {
+    window.location.href = "/";
+  }
 }
