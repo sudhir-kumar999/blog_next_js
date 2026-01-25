@@ -9,7 +9,7 @@ import {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 type Role = "admin" | "user";
 
@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // 🔹 Initial session (refresh / first load)
@@ -49,12 +50,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single();
 
         setRole(profile?.role ?? "user");
+      } else {
+        setRole(null);
       }
 
       setLoading(false);
     });
 
-    // 🔹 Listen to auth changes (login / logout)
+    // 🔹 Auth state listener
     const {
       data: { subscription },
     } = supabaseBrowser.auth.onAuthStateChange(
@@ -64,12 +67,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(user);
 
+        // 🔓 USER LOGOUT
         if (!user) {
           setRole(null);
-          router.replace("/");
+
+          // ❗ ONLY redirect if user was on admin route
+          if (pathname.startsWith("/admin")) {
+            router.replace("/auth/login");
+          }
           return;
         }
 
+        // 🔹 Fetch role
         const { data: profile } = await supabaseBrowser
           .from("profiles")
           .select("role")
@@ -79,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const role = profile?.role ?? "user";
         setRole(role);
 
-        // 🔥 Redirect after login
+        // 🔐 Redirect ONLY after login
         if (event === "SIGNED_IN") {
           if (role === "admin") {
             router.replace("/admin");
@@ -93,14 +102,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, pathname]);
 
-  // 🔹 Clean logout (NO API CALL)
   async function logout() {
     await supabaseBrowser.auth.signOut();
     setUser(null);
     setSession(null);
     setRole(null);
+
+    // ❗ logout redirect is OK
     router.replace("/");
   }
 
@@ -120,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ✅ Safe custom hook
+// ✅ Safe hook
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
