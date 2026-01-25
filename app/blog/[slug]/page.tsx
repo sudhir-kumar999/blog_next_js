@@ -7,6 +7,8 @@ import BlogContent from "@/components/BlogContent";
 
 export const revalidate = 60; // ISR – SEO friendly
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
+
 /* ======================================================
    STATIC PARAMS (SSG)
 ====================================================== */
@@ -61,7 +63,7 @@ export async function generateMetadata({
 
   const title = post.seo_title || post.title;
   const description = post.seo_description || post.excerpt;
-  const url = `https://yourdomain.com/blog/${slug}`;
+  const url = `${baseUrl}/blog/${slug}`;
   const category = post.categories?.[0];
 
   return {
@@ -139,7 +141,7 @@ export default async function BlogPostPage({
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://yourdomain.com/blog/${slug}`,
+      "@id": `${baseUrl}/blog/${slug}`,
     },
   };
 
@@ -201,7 +203,7 @@ export default async function BlogPostPage({
           <article itemScope itemType="https://schema.org/BlogPosting">
             <meta
               itemProp="mainEntityOfPage"
-              content={`https://yourdomain.com/blog/${slug}`}
+              content={`${baseUrl}/blog/${slug}`}
             />
 
             <header className="mb-10 border-b border-zinc-100 pb-8">
