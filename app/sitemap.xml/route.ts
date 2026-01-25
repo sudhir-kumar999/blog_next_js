@@ -3,8 +3,8 @@
 import { supabaseServer } from "@/lib/supabase/server";
 
 export async function GET() {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = "https://www.studymitra.in";
+
 
   // 🔹 Fetch only published posts
   const { data: posts, error } = await supabaseServer
