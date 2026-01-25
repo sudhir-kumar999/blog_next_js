@@ -1,21 +1,54 @@
+"use client";
+
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase/server";
+import { useEffect, useState } from "react";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 
-export const revalidate = 0; // admin always fresh
+interface Post {
+  id: string;
+  title: string;
+  published: boolean;
+  published_at: string | null;
+  categories?: { name: string }[];
+}
 
-export default async function AdminPage() {
-  const { data: posts } = await supabaseServer
-    .from("posts")
-    .select(`
-      id,
-      title,
-      published,
-      published_at,
-      categories (
-        name
-      )
-    `)
-    .order("created_at", { ascending: false });
+export default function AdminPage() {
+  const [posts, setPosts] = useState<Post[]>([]);
+
+  useEffect(() => {
+    supabaseBrowser
+      .from("posts")
+      .select(`
+        id,
+        title,
+        published,
+        published_at,
+        categories (
+          name
+        )
+      `)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setPosts(data as Post[]);
+      });
+  }, []);
+
+  async function deletePost(id: string) {
+    const ok = confirm("Are you sure you want to delete this post?");
+    if (!ok) return;
+
+    const res = await fetch(`/api/posts/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      alert("Failed to delete post");
+      return;
+    }
+
+    // ✅ Remove from UI without reload
+    setPosts((prev) => prev.filter((p) => p.id !== id));
+  }
 
   return (
     <>
@@ -31,7 +64,7 @@ export default async function AdminPage() {
       </header>
 
       <div className="space-y-4">
-        {posts?.map((post) => (
+        {posts.map((post) => (
           <div
             key={post.id}
             className="flex items-center justify-between rounded border p-4"
@@ -55,15 +88,17 @@ export default async function AdminPage() {
                 Edit
               </Link>
 
-              <form action={`/api/posts/${post.id}`} method="POST">
-                <input type="hidden" name="_method" value="DELETE" />
-                <button className="text-red-600">Delete</button>
-              </form>
+              <button
+                onClick={() => deletePost(post.id)}
+                className="text-red-600"
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}
 
-        {posts?.length === 0 && (
+        {posts.length === 0 && (
           <p className="text-zinc-500">No posts yet.</p>
         )}
       </div>
