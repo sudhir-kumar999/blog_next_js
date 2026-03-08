@@ -126,6 +126,22 @@ export default async function BlogPostPage({
     notFound();
   }
 
+  // Other posts for internal linking (helps "Crawled - not indexed" → indexed)
+  const { data: otherPosts } = await supabaseServer
+    .from("posts")
+    .select(`
+      id,
+      title,
+      slug,
+      excerpt,
+      published_at,
+      categories ( name, slug )
+    `)
+    .eq("published", true)
+    .neq("id", post.id)
+    .order("published_at", { ascending: false })
+    .limit(4);
+
   const htmlContent = markdownToHtml(post.content);
   const category = post.categories?.[0];
 
@@ -257,6 +273,33 @@ export default async function BlogPostPage({
               <BlogContent html={htmlContent} />
             </div>
           </article>
+
+          {/* More articles – internal links help Google index "Crawled - not indexed" pages */}
+          {otherPosts && otherPosts.length > 0 && (
+            <section className="mt-16 border-t border-zinc-200 pt-12" aria-label="More articles">
+              <h2 className="text-xl font-semibold text-black mb-6">More articles</h2>
+              <ul className="space-y-4">
+                {otherPosts.map((p) => (
+                  <li key={p.id}>
+                    <Link
+                      href={`/blog/${p.slug}`}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      {p.title}
+                    </Link>
+                    {p.excerpt && (
+                      <p className="text-sm text-zinc-600 mt-1 line-clamp-2">{p.excerpt}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6">
+                <Link href="/blog" className="text-blue-600 hover:underline font-medium">
+                  View all posts →
+                </Link>
+              </p>
+            </section>
+          )}
         </main>
       </div>
     </>
