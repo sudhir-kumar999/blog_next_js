@@ -12,12 +12,17 @@ interface BlogCardProps {
     slug: string;
     excerpt: string | null;
     published_at: string;
-    categories: Category[] | null; // ✅ ARRAY FIX
+    categories: Category[] | Category | null;
   };
 }
 
+function getFirstCategory(categories: Category[] | Category | null | undefined): Category | null {
+  if (!categories) return null;
+  return Array.isArray(categories) ? categories[0] ?? null : categories;
+}
+
 export default function BlogCard({ post }: BlogCardProps) {
-  const category = post.categories?.[0]; // ✅ SAFE ACCESS
+  const category = getFirstCategory(post.categories);
 
   return (
     <article className="rounded-xl border border-zinc-200 bg-white p-6 transition hover:shadow-md">

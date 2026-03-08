@@ -2,8 +2,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { uploadPostImage } from "@/lib/supabase/uploadImage";
+import { countWords, MIN_POST_WORDS } from "@/lib/wordCount";
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -16,8 +17,15 @@ export default function NewPostPage() {
   const [uploadingFeaturedImage, setUploadingFeaturedImage] =
     useState(false);
 
+  const wordCount = useMemo(() => countWords(content), [content]);
+  const meetsMinWords = wordCount >= MIN_POST_WORDS;
+
   // 🔹 Create post
   async function createPost(formData: FormData) {
+    if (!meetsMinWords) {
+      alert(`Post must be at least ${MIN_POST_WORDS} words. Current: ${wordCount} words.`);
+      return;
+    }
     formData.set("content", content);
 
     if (featuredImage) {
@@ -151,22 +159,34 @@ export default function NewPostPage() {
         </div>
 
         {/* 🔹 Markdown content */}
-        <textarea
-          name="content"
-          placeholder="Markdown content"
-          rows={12}
-          required
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="w-full rounded border px-3 py-2 font-mono"
-        />
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="block text-sm font-medium">Markdown content (min 1500 words)</label>
+            <span className={`text-sm ${meetsMinWords ? "text-green-600" : "text-amber-600"}`}>
+              {wordCount} / {MIN_POST_WORDS} words
+            </span>
+          </div>
+          <textarea
+            name="content"
+            placeholder="Markdown content"
+            rows={12}
+            required
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="w-full rounded border px-3 py-2 font-mono"
+          />
+        </div>
 
         <label className="flex items-center gap-2">
           <input type="checkbox" name="published" />
           Publish
         </label>
 
-        <button className="rounded bg-black px-4 py-2 text-white">
+        <button
+          type="submit"
+          disabled={!meetsMinWords}
+          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Create
         </button>
       </form>

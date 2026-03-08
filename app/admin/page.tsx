@@ -55,12 +55,20 @@ export default function AdminPage() {
       <header className="mb-10 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Admin – Posts</h1>
 
-        <Link
-          href="/admin/new"
-          className="rounded bg-black px-4 py-2 text-white"
-        >
-          + New Post
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/admin/scheduled"
+            className="rounded border border-zinc-300 px-4 py-2 text-zinc-700 hover:bg-zinc-50"
+          >
+            Daily queue
+          </Link>
+          <Link
+            href="/admin/new"
+            className="rounded bg-black px-4 py-2 text-white"
+          >
+            + New Post
+          </Link>
+        </div>
       </header>
 
       <div className="space-y-4">

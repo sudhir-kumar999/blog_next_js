@@ -69,7 +69,7 @@ export async function generateMetadata({
   const title = post.seo_title || post.title;
   const description = post.seo_description || post.excerpt;
   const url = `${baseUrl}/blog/${slug}`;
-  const category = post.categories?.[0];
+  const category = Array.isArray(post.categories) ? post.categories[0] : post.categories;
 
   return {
     title,
@@ -143,7 +143,7 @@ export default async function BlogPostPage({
     .limit(4);
 
   const htmlContent = markdownToHtml(post.content);
-  const category = post.categories?.[0];
+  const category = Array.isArray(post.categories) ? post.categories[0] : post.categories;
 
   const postUrl = `${baseUrl}/blog/${slug}`;
   const jsonLd = {

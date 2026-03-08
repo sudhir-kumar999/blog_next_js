@@ -2,6 +2,10 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { MetadataRoute } from "next";
 import { SITE_BASE_URL } from "@/lib/site-config";
 
+// Har request pe fresh sitemap – nayi post add hote hi /sitemap.xml me dikhegi
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const staticPages: MetadataRoute.Sitemap = [
   { url: SITE_BASE_URL, lastModified: new Date(), changeFrequency: "daily" as const, priority: 1 },
   { url: `${SITE_BASE_URL}/blog`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },

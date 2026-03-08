@@ -2,9 +2,10 @@
 "use client";
 
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
+import { countWords, MIN_POST_WORDS } from "@/lib/wordCount";
 
 interface Category {
   id: string;
@@ -22,6 +23,7 @@ export default function EditPostPage({
   const router = useRouter();
   const [post, setPost] = useState<any>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [content, setContent] = useState("");
 
   // 🔹 Fetch post
   useEffect(() => {
@@ -32,7 +34,10 @@ export default function EditPostPage({
       .select("*")
       .eq("id", id)
       .single()
-      .then(({ data }) => setPost(data));
+      .then(({ data }) => {
+        setPost(data);
+        if (data?.content) setContent(data.content);
+      });
   }, [id]);
 
   // 🔹 Fetch categories
@@ -44,12 +49,24 @@ export default function EditPostPage({
       .then(({ data }) => setCategories(data || []));
   }, []);
 
+  const wordCount = useMemo(() => countWords(content), [content]);
+  const meetsMinWords = wordCount >= MIN_POST_WORDS;
+
   async function updatePost(formData: FormData) {
-    await fetch("/api/posts", {
+    formData.set("content", content);
+    if (!meetsMinWords) {
+      alert(`Post must be at least ${MIN_POST_WORDS} words. Current: ${wordCount} words.`);
+      return;
+    }
+    const res = await fetch("/api/posts", {
       method: "PUT",
       body: formData,
     });
-
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.message || "Update failed.");
+      return;
+    }
     router.push("/admin");
   }
 
@@ -86,13 +103,22 @@ export default function EditPostPage({
           className="w-full rounded border px-3 py-2"
         />
 
-        {/* Content */}
-        <textarea
-          name="content"
-          defaultValue={post.content}
-          rows={10}
-          className="w-full rounded border px-3 py-2"
-        />
+        {/* Content (min 1500 words) */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="block text-sm font-medium">Content (min 1500 words)</label>
+            <span className={`text-sm ${meetsMinWords ? "text-green-600" : "text-amber-600"}`}>
+              {wordCount} / {MIN_POST_WORDS} words
+            </span>
+          </div>
+          <textarea
+            name="content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={10}
+            className="w-full rounded border px-3 py-2"
+          />
+        </div>
 
         {/* 🔥 CATEGORY SELECT (NEW) */}
         <div>
@@ -126,7 +152,11 @@ export default function EditPostPage({
           Publish
         </label>
 
-        <button className="rounded bg-black px-4 py-2 text-white">
+        <button
+          type="submit"
+          disabled={!meetsMinWords}
+          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Update
         </button>
       </form>
