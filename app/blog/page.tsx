@@ -7,6 +7,7 @@ export const revalidate = 60;
 export const metadata = {
   title: "Blog - Latest Articles & Tutorials",
   description: "Explore our latest blog posts, tutorials, and guides on web development, design, and technology.",
+  robots: { index: true, follow: true },
 };
 
 interface Category {

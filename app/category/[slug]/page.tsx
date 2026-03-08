@@ -5,8 +5,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import BlogCard from "@/components/BlogCard";
+import { SITE_BASE_URL } from "@/lib/site-config";
 
 export const revalidate = 60; // ISR – SEO friendly
+export const dynamicParams = true;
 
 /* ======================================================
    STATIC PARAMS (SSG for categories)
@@ -18,9 +20,12 @@ export async function generateStaticParams() {
 
   if (error || !data) return [];
 
-  return data.map((cat) => ({
-    slug: cat.slug,
-  }));
+  return data
+    .filter((cat) => cat.slug && typeof cat.slug === "string")
+    .map((cat) => ({
+      slug: cat.slug.trim().replace(/\s+/g, "-"),
+    }))
+    .filter((c) => c.slug.length > 0);
 }
 
 /* ======================================================
@@ -46,13 +51,17 @@ export async function generateMetadata({
     };
   }
 
+  const url = `${SITE_BASE_URL}/category/${slug}`;
   return {
     title: `${category.name} Articles`,
     description: `Read all posts related to ${category.name}`,
+    robots: { index: true, follow: true },
+    alternates: { canonical: url },
     openGraph: {
       title: `${category.name} Articles`,
       description: `Read all posts related to ${category.name}`,
       type: "website",
+      url,
     },
   };
 }

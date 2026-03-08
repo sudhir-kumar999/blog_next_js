@@ -4,10 +4,12 @@ import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { markdownToHtml } from "@/lib/markdown/markdownToHtml";
 import BlogContent from "@/components/BlogContent";
+import { SITE_BASE_URL } from "@/lib/site-config";
 
 export const revalidate = 60; // ISR – SEO friendly
+export const dynamicParams = true; // Allow new posts to be rendered on-demand (indexable)
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
+const baseUrl = SITE_BASE_URL;
 
 /* ======================================================
    STATIC PARAMS (SSG)
@@ -20,9 +22,12 @@ export async function generateStaticParams() {
 
   if (error || !data) return [];
 
-  return data.map((post) => ({
-    slug: post.slug,
-  }));
+  return data
+    .filter((post) => post.slug && typeof post.slug === "string")
+    .map((post) => ({
+      slug: post.slug.trim().replace(/\s+/g, "-"),
+    }))
+    .filter((p) => p.slug.length > 0);
 }
 
 /* ======================================================
@@ -69,6 +74,7 @@ export async function generateMetadata({
   return {
     title,
     description,
+    robots: { index: true, follow: true },
     keywords: category?.name ? [category.name] : [],
     authors: [{ name: "Your Blog" }],
     openGraph: {
@@ -123,9 +129,11 @@ export default async function BlogPostPage({
   const htmlContent = markdownToHtml(post.content);
   const category = post.categories?.[0];
 
+  const postUrl = `${baseUrl}/blog/${slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
+    url: postUrl,
     headline: post.title,
     description: post.excerpt,
     image: post.featured_image || undefined,
@@ -141,7 +149,7 @@ export default async function BlogPostPage({
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${baseUrl}/blog/${slug}`,
+      "@id": postUrl,
     },
   };
 
