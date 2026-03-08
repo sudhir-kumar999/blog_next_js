@@ -1,8 +1,22 @@
 // app/page.tsx
 import { supabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
+import { SITE_BASE_URL } from "@/lib/site-config";
+import type { Metadata } from "next";
 
 export const revalidate = 60; // ISR for SEO + fresh content
+
+export const metadata: Metadata = {
+  title: "Latest Blog Posts",
+  description: "Discover insights, stories, and ideas. Read the latest blog posts and articles.",
+  alternates: { canonical: SITE_BASE_URL },
+  openGraph: {
+    url: SITE_BASE_URL,
+    title: "Latest Blog Posts",
+    description: "Discover insights, stories, and ideas. Read the latest blog posts and articles.",
+  },
+  robots: { index: true, follow: true },
+};
 
 export default async function Home() {
   const { data: posts, error } = await supabaseServer
@@ -100,6 +114,20 @@ export default async function Home() {
             </div>
           )}
         </section>
+
+        {posts && posts.length > 0 && (
+          <p className="mt-12 text-center">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 text-blue-600 font-medium hover:underline"
+            >
+              View all articles
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </p>
+        )}
       </main>
 
       {/* <style jsx>{`

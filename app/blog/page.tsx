@@ -1,12 +1,21 @@
 // app/blog/page.tsx
 import { supabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
+import { SITE_BASE_URL } from "@/lib/site-config";
+import type { Metadata } from "next";
 
 export const revalidate = 60;
 
-export const metadata = {
+const blogUrl = `${SITE_BASE_URL}/blog`;
+export const metadata: Metadata = {
   title: "Blog - Latest Articles & Tutorials",
   description: "Explore our latest blog posts, tutorials, and guides on web development, design, and technology.",
+  alternates: { canonical: blogUrl },
+  openGraph: {
+    url: blogUrl,
+    title: "Blog - Latest Articles & Tutorials",
+    description: "Explore our latest blog posts, tutorials, and guides on web development, design, and technology.",
+  },
   robots: { index: true, follow: true },
 };
 

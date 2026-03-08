@@ -24,10 +24,16 @@ export default function NewPostPage() {
       formData.set("featured_image", featuredImage);
     }
 
-    await fetch("/api/posts", {
+    const res = await fetch("/api/posts", {
       method: "POST",
       body: formData,
     });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.message || "Failed to create post. Try again.");
+      return;
+    }
 
     router.push("/admin");
   }

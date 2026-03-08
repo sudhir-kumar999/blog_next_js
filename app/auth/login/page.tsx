@@ -2,7 +2,6 @@
 
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import AuthForm from "@/components/AuthForm";
-import GoogleButton from "@/components/GoogleButton";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -30,10 +29,7 @@ export default function LoginPage() {
   }
 
   return (
-    // <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 sm:px-6">
-        <div className="w-full max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl border border-zinc-200 bg-white px-6 py-10 shadow-md sm:px-10">
-
-      <div className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white px-6 py-10 shadow-md sm:px-10">
+    <div className="w-full max-w-md sm:max-w-lg rounded-2xl border border-zinc-200 bg-white px-6 py-10 shadow-md sm:px-10">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
@@ -52,26 +48,14 @@ export default function LoginPage() {
         <AuthForm type="login" onSubmit={login} />
 
         {/* Forgot password */}
-        {/* <div className="mt-4 text-right">
+        <div className="mt-4 text-right">
           <Link
             href="/auth/forgot-password"
             className="text-sm text-blue-600 hover:underline"
           >
             Forgot password?
           </Link>
-        </div> */}
-
-        {/* Divider */}
-        <div className="my-8 flex items-center gap-4">
-          <div className="h-px w-full bg-zinc-200" />
-          <span className="text-xs font-medium text-zinc-400">
-            OR CONTINUE WITH
-          </span>
-          <div className="h-px w-full bg-zinc-200" />
         </div>
-
-        {/* Google */}
-        {/* <GoogleButton /> */}
 
         {/* Footer */}
         <p className="mt-8 text-center text-sm text-zinc-600">
@@ -83,7 +67,6 @@ export default function LoginPage() {
             Sign up
           </Link>
         </p>
-      </div>
     </div>
   );
 }

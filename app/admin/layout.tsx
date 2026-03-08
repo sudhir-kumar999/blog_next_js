@@ -1,32 +1,16 @@
-"use client";
+import type { Metadata } from "next";
+import AdminAuthGuard from "@/components/AdminAuthGuard";
 
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+export const metadata: Metadata = {
+  title: "Admin",
+  description: "Admin dashboard",
+  robots: { index: false, follow: false },
+};
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isLoggedIn, role, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (!isLoggedIn) {
-      router.replace("/auth/login");
-      return;
-    }
-
-    if (role !== "admin") {
-      router.replace("/");
-      return;
-    }
-  }, [isLoggedIn, role, loading, router]);
-
-  if (loading || role !== "admin") return null;
-
-  return <>{children}</>;
+  return <AdminAuthGuard>{children}</AdminAuthGuard>;
 }
