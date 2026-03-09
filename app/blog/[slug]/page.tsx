@@ -1,3 +1,5 @@
+// app/blog/[slug]/page.tsx
+// SEO: Server Component + SSG/ISR. Full article HTML in initial response (no useEffect/client fetch).
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -6,8 +8,9 @@ import { markdownToHtml } from "@/lib/markdown/markdownToHtml";
 import BlogContent from "@/components/BlogContent";
 import { SITE_BASE_URL } from "@/lib/site-config";
 
-export const revalidate = 60; // ISR – SEO friendly
-export const dynamicParams = true; // Allow new posts to be rendered on-demand (indexable)
+export const dynamic = "force-static"; // Ensure static generation at build (not dynamic)
+export const revalidate = 60; // ISR: revalidate after 60s
+export const dynamicParams = true; // New slugs still rendered on-demand (indexable)
 
 const baseUrl = SITE_BASE_URL;
 

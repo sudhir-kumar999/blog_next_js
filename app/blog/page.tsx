@@ -1,10 +1,11 @@
 // app/blog/page.tsx
+// SEO: Server Component – data fetched on server, full HTML in initial response (no client fetch).
 import { supabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
 import { SITE_BASE_URL } from "@/lib/site-config";
 import type { Metadata } from "next";
 
-export const revalidate = 60;
+export const revalidate = 60; // ISR: revalidate every 60s; no client-side data fetch.
 
 const blogUrl = `${SITE_BASE_URL}/blog`;
 export const metadata: Metadata = {
@@ -30,7 +31,12 @@ interface Post {
   slug: string;
   excerpt: string | null;
   published_at: string;
-  categories: Category | null;
+  categories: Category[] | Category | null;
+}
+
+function getFirstCategory(categories: Post["categories"]): Category | null {
+  if (!categories) return null;
+  return Array.isArray(categories) ? categories[0] ?? null : categories;
 }
 
 export default async function BlogPage() {
@@ -78,11 +84,14 @@ export default async function BlogPage() {
               {/* Featured Post (First one) */}
               <article className="mb-12 overflow-hidden rounded-2xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-white shadow-sm transition-all duration-300 hover:shadow-lg">
                 <div className="p-8 sm:p-10">
-                  {typedPosts[0].categories && (
-                    <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                      {typedPosts[0].categories.name}
-                    </span>
-                  )}
+                  {(() => {
+                    const cat = getFirstCategory(typedPosts[0].categories);
+                    return cat ? (
+                      <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                        {cat.name}
+                      </span>
+                    ) : null;
+                  })()}
                   <h2 className="mt-4 text-3xl font-bold leading-tight text-black sm:text-4xl">
                     <Link 
                       href={`/blog/${typedPosts[0].slug}`}
@@ -123,22 +132,20 @@ export default async function BlogPage() {
               {/* Rest of Posts */}
               {typedPosts.length > 1 && (
                 <div className="grid gap-6 sm:grid-cols-2">
-                  {typedPosts.slice(1).map((post, index) => (
+                  {typedPosts.slice(1).map((post) => (
                     <article
                       key={post.id}
                       className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                      style={{
-                        animationDelay: `${index * 100}ms`,
-                        animation: 'fadeIn 0.6s ease-out forwards',
-                        opacity: 0
-                      }}
                     >
                       <div className="p-6">
-                        {post.categories && (
-                          <span className="inline-block rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700">
-                            {post.categories.name}
-                          </span>
-                        )}
+                        {(() => {
+                          const cat = getFirstCategory(post.categories);
+                          return cat ? (
+                            <span className="inline-block rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700">
+                              {cat.name}
+                            </span>
+                          ) : null;
+                        })()}
                         <h3 className="mt-3 text-xl font-bold leading-tight text-black transition-colors group-hover:text-blue-600">
                           <Link href={`/blog/${post.slug}`} className="focus:outline-none">
                             <span className="absolute inset-0" aria-hidden="true"></span>
@@ -189,19 +196,6 @@ export default async function BlogPage() {
           )}
         </section>
       </main>
-
-      {/* <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style> */}
     </div>
   );
 }
