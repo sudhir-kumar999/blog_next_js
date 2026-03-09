@@ -7,6 +7,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { markdownToHtml } from "@/lib/markdown/markdownToHtml";
 import BlogContent from "@/components/BlogContent";
 import { SITE_BASE_URL } from "@/lib/site-config";
+import { countWords } from "@/lib/wordCount";
 
 export const dynamic = "force-static"; // Ensure static generation at build (not dynamic)
 export const revalidate = 60; // ISR: revalidate after 60s
@@ -79,7 +80,7 @@ export async function generateMetadata({
     description,
     robots: { index: true, follow: true },
     keywords: category?.name ? [category.name] : [],
-    authors: [{ name: "Your Blog" }],
+    authors: [{ name: "Study Mitra", url: baseUrl }],
     openGraph: {
       title,
       description,
@@ -149,22 +150,30 @@ export default async function BlogPostPage({
   const category = Array.isArray(post.categories) ? post.categories[0] : post.categories;
 
   const postUrl = `${baseUrl}/blog/${slug}`;
+  const wordCount = countWords(post.content || "");
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     url: postUrl,
     headline: post.title,
-    description: post.excerpt,
-    image: post.featured_image || undefined,
+    description: post.excerpt || undefined,
+    image: post.featured_image ? [post.featured_image] : undefined,
     datePublished: post.published_at,
     dateModified: post.updated_at || post.published_at,
+    wordCount: wordCount > 0 ? wordCount : undefined,
     author: {
       "@type": "Organization",
-      name: "Your Blog",
+      name: "Study Mitra",
+      url: baseUrl,
     },
     publisher: {
       "@type": "Organization",
-      name: "Your Blog",
+      name: "Study Mitra",
+      url: baseUrl,
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/favicon.ico`,
+      },
     },
     mainEntityOfPage: {
       "@type": "WebPage",
