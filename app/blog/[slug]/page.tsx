@@ -9,8 +9,11 @@ import BlogContent from "@/components/BlogContent";
 import { SITE_BASE_URL } from "@/lib/site-config";
 import { countWords } from "@/lib/wordCount";
 
-export const dynamic = "force-static"; // Ensure static generation at build (not dynamic)
-export const revalidate = 60; // ISR: revalidate after 60s
+// export const dynamic = "force-static"; // Ensure static generation at build (not dynamic)
+// export const revalidate = 60; // ISR: revalidate after 60s
+
+// SIRF YE RAKHO:
+export const revalidate = 3600; // 1 hour — stable cache
 export const dynamicParams = true; // New slugs still rendered on-demand (indexable)
 
 const baseUrl = SITE_BASE_URL;
