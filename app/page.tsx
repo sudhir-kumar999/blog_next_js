@@ -7,13 +7,13 @@ import type { Metadata } from "next";
 export const revalidate = 60; // ISR for SEO + fresh content
 
 export const metadata: Metadata = {
-  title: "Latest Blog Posts",
-  description: "Discover insights, stories, and ideas. Read the latest blog posts and articles.",
+  title: "StudyMitra — सरकारी योजना, परीक्षा तैयारी, शिक्षा गाइड",
+  description: "सरकारी नौकरी, BPSC, RRB, CBSE, राशन कार्ड, जाति प्रमाण पत्र — सब कुछ हिंदी में पढ़ें StudyMitra पर।",
   alternates: { canonical: SITE_BASE_URL },
   openGraph: {
     url: SITE_BASE_URL,
-    title: "Latest Blog Posts",
-    description: "Discover insights, stories, and ideas. Read the latest blog posts and articles.",
+    title: "StudyMitra — सरकारी योजना, परीक्षा तैयारी, शिक्षा गाइड",
+    description: "सरकारी नौकरी, BPSC, RRB, CBSE, राशन कार्ड, जाति प्रमाण पत्र — सब कुछ हिंदी में पढ़ें StudyMitra पर।",
   },
   robots: { index: true, follow: true },
 };
