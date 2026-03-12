@@ -8,7 +8,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <h3 className="text-lg font-semibold text-black">
-              My Blog
+              Studymitra.in
             </h3>
             <p className="mt-2 text-sm text-zinc-600">
               SEO friendly tech blogs built with Next.js & Supabase.

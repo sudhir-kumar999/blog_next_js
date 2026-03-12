@@ -21,10 +21,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_BASE_URL),
   title: {
-    default: "My Blog",
-    template: "%s | My Blog",
+    default: "StudyMitra",
+    template: "%s | StudyMitra",
   },
-  description: "Read the latest blog posts without login",
+  description: "सरकारी योजनाएं, परीक्षा की तैयारी, और शिक्षा से जुड़ी जानकारी हिंदी में — StudyMitra पर पढ़ें।",
   robots: { index: true, follow: true },
   verification: {
     google: "C5p3Z0zxSQIohmRRIADX9u0Sn-8YlWcZ_JV0N3ftvvA",
