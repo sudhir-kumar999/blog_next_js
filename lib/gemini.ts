@@ -13,18 +13,78 @@ export interface GeneratedPost {
   content: string;
 }
 
-const PROMPT = `You are an expert blog writer for an Indian education/study blog (like Study Mitra). Your audience is students preparing for exams, competitive exams, and general learning.
+const PROMPT = `You are an expert Hindi blog writer for an Indian education website like Study Mitra, Sarkari Result, or Result Bharat. Your audience is Indian students preparing for exams, competitive exams, and general learning.
 
-Generate ONE complete blog post. Return ONLY a valid JSON object (no markdown, no code block, no extra text) with exactly these keys:
-- "title": string, catchy and SEO-friendly, under 70 chars
-- "slug": string, URL-friendly, lowercase, hyphens only (e.g. "how-to-study-smart-for-exams")
-- "excerpt": string, 1-2 sentences for meta description, under 160 chars
-- "seo_title": string, optional SEO title (can same as title)
-- "seo_description": string, optional SEO description (can same as excerpt)
-- "content": string, FULL article body in Markdown. MUST be at least ${MIN_POST_WORDS} words. Use headings (##, ###), short paragraphs, bullet points. Write in clear English. Topic must be trending, useful for Indian students, and 100% original (no plagiarism). Choose a topic like: study tips, exam preparation, career guidance, productivity, mental health for students, new education policy, competitive exam strategies, or similar.
+Generate ONE complete blog post. Return ONLY a valid JSON object (no markdown block, no code block, no extra text) with exactly these keys:
 
-Example topic ideas: "How to Focus While Studying", "Best Time to Study According to Science", "How to Prepare for Board Exams in 30 Days", "Side Hustles for College Students in India".
-Pick ONE topic and write a complete, original post. Return only the JSON object.`;
+- "title": string, catchy and SEO-friendly, under 70 characters
+- "slug": string, URL-friendly, lowercase, hyphens only (e.g. "ssc-cgl-2026-notification")
+- "excerpt": string, 1-2 sentences for meta description, under 160 characters
+- "seo_title": string, optional SEO title (can be same as title)
+- "seo_description": string, optional SEO description (can be same as excerpt)
+- "content": string, FULL article body in Markdown
+
+CONTENT RULES:
+- Write in simple Hindi (Devanagari script)
+- Content MUST be at least ${MIN_POST_WORDS} words
+- Use clear headings (##, ###), short paragraphs, and bullet points
+- SEO optimized (use keywords like: Sarkari Naukri, Admit Card, Result, Notes, Questions, Exam Preparation)
+- 100% original content (no plagiarism)
+- Use latest year references like 2025 or 2026 when relevant
+- Make content engaging and easy to understand for students
+
+TOPIC SELECTION:
+Automatically choose ONE trending topic from:
+1. Sarkari Job Notification
+2. Admit Card Update
+3. Result Update
+4. Admission Form
+5. Study Notes (any subject)
+6. Important Questions with Answers
+7. Exam Preparation Tips
+8. Career Guidance
+
+CONTENT STRUCTURE BASED ON TOPIC:
+
+👉 If topic is Job / Admit Card / Result / Admission:
+- Introduction
+- Important Dates
+- Application Fee
+- Age Limit
+- Vacancy Details
+- Selection Process
+- How to Apply
+- Important Links
+
+👉 If topic is Notes:
+- Introduction
+- Definition
+- Key Concepts
+- Examples
+- Summary
+
+👉 If topic is Questions:
+- Introduction
+- Important Questions with Answers
+- Short Tricks (if possible)
+
+👉 If topic is Tips / Career:
+- Introduction
+- Step-by-step guidance
+- Tips
+- Conclusion
+
+SLUG RULE:
+- Convert title into lowercase
+- Replace spaces with hyphens
+- Remove special characters
+
+IMPORTANT:
+- Do NOT include anything except JSON
+- Do NOT wrap response in markdown or code block
+- Ensure JSON is valid and parsable
+
+Now generate the blog post.`;
 
 function parseGeneratedJson(raw: string): GeneratedPost | null {
   let text = raw.trim();
