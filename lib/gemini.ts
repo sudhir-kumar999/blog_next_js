@@ -35,7 +35,7 @@ CONTENT RULES:
 
 TOPIC SELECTION:
 Automatically choose ONE trending topic from:
-1. Sarkari Job Notification
+1. Study Notes (any subject) with Important Questions with Answers
 2. Admit Card Update
 3. Result Update
 4. Admission Form
