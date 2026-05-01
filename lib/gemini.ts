@@ -13,7 +13,37 @@ export interface GeneratedPost {
   content: string;
 }
 
-const PROMPT = `You are an expert Hindi blog writer for an Indian education website like Study Mitra, Sarkari Result, or Result Bharat. Your audience is Indian students preparing for exams, competitive exams, and general learning.
+const COMPETITION_TOPICS = [
+  { category: "सामान्य ज्ञान - भारतीय इतिहास", keywords: "Indian History GK, भारतीय इतिहास प्रश्न उत्तर, SSC History MCQ", hint: "Mughal Empire, Freedom Movement, Ancient India, Medieval India" },
+  { category: "सामान्य ज्ञान - भूगोल", keywords: "Geography GK Hindi, भूगोल प्रश्न उत्तर, Railway Geography MCQ", hint: "Rivers, Mountains, States, Climate, National Parks" },
+  { category: "सामान्य ज्ञान - भारतीय संविधान और राजव्यवस्था", keywords: "Polity GK Hindi, संविधान प्रश्न उत्तर, UPSC Polity MCQ", hint: "Fundamental Rights, Parliament, President, Courts, Articles" },
+  { category: "सामान्य विज्ञान - भौतिकी", keywords: "Physics GK Hindi, सामान्य विज्ञान प्रश्न, SSC Science MCQ", hint: "Newton Laws, Light, Sound, Electricity, Force" },
+  { category: "सामान्य विज्ञान - रसायन विज्ञान", keywords: "Chemistry GK Hindi, रसायन विज्ञान प्रश्न उत्तर, Railway Science", hint: "Elements, Acids, Bases, Chemical Reactions, Periodic Table" },
+  { category: "सामान्य विज्ञान - जीव विज्ञान", keywords: "Biology GK Hindi, जीव विज्ञान प्रश्न, SSC Biology MCQ", hint: "Human Body, Diseases, Plants, Animals, Vitamins" },
+  { category: "हिंदी व्याकरण", keywords: "Hindi Grammar MCQ, हिंदी व्याकरण प्रश्न उत्तर, SSC Hindi", hint: "Sandhi, Samas, Muhavare, Alankar, Vilom Shabd, Paryayvachi" },
+  { category: "गणित - शॉर्ट ट्रिक्स और फॉर्मूला", keywords: "Math Tricks Hindi, गणित शॉर्ट ट्रिक्स, SSC Math Shortcuts", hint: "Percentage, Ratio, SI/CI, Speed-Time, Profit-Loss, Algebra" },
+  { category: "तार्किक योग्यता - Reasoning", keywords: "Reasoning MCQ Hindi, तार्किक योग्यता प्रश्न, SSC Reasoning", hint: "Series, Analogy, Coding-Decoding, Blood Relations, Puzzles" },
+  { category: "कंप्यूटर ज्ञान", keywords: "Computer GK Hindi, कंप्यूटर प्रश्न उत्तर, Bank Computer MCQ", hint: "MS Office, Internet, Hardware, Software, Shortcut Keys, OS" },
+  { category: "करंट अफेयर्स - राष्ट्रीय और अंतर्राष्ट्रीय", keywords: "Current Affairs Hindi 2025, करंट अफेयर्स प्रश्न, Monthly GK 2025", hint: "Awards, Sports, Government Schemes, Appointments, Summits" },
+  { category: "अर्थव्यवस्था - Economy GK", keywords: "Economy GK Hindi, भारतीय अर्थव्यवस्था प्रश्न, UPSC Economy MCQ", hint: "GDP, Budget, RBI, Banking, Five Year Plans, Tax System" },
+  { category: "English Grammar for Competitive Exams", keywords: "English Grammar MCQ Hindi, Tenses, SSC English Questions", hint: "Tenses, Articles, Prepositions, Active Passive, Error Spotting" },
+  { category: "पर्यावरण और पारिस्थितिकी", keywords: "Environment GK Hindi, पर्यावरण प्रश्न उत्तर, UPSC Environment", hint: "Pollution, Climate Change, Wildlife, National Parks, Treaties" },
+  { category: "खेल-कूद सामान्य ज्ञान", keywords: "Sports GK Hindi, खेल प्रश्न उत्तर, Sports Current Affairs 2025", hint: "Olympics, Cricket, Football, Awards, Indian Sports Achievements" },
+];
+
+function getTodaysTopic() {
+  const today = new Date();
+  const dateSeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  const primaryIndex = dateSeed % COMPETITION_TOPICS.length;
+  const randomOffset = Math.floor(Math.random() * 3);
+  const finalIndex = (primaryIndex + randomOffset) % COMPETITION_TOPICS.length;
+  return COMPETITION_TOPICS[finalIndex];
+}
+
+function buildPrompt(): string {
+  const topic = getTodaysTopic();
+
+  return `You are an expert Hindi blog writer for an Indian education website like Study Mitra, Sarkari Result, or Result Bharat. Your audience is Indian students preparing for exams, competitive exams, and general learning.
 
 Generate ONE complete blog post. Return ONLY a valid JSON object (no markdown block, no code block, no extra text) with exactly these keys:
 
@@ -28,63 +58,62 @@ CONTENT RULES:
 - Write in simple Hindi (Devanagari script)
 - Content MUST be at least ${MIN_POST_WORDS} words
 - Use clear headings (##, ###), short paragraphs, and bullet points
-- SEO optimized (use keywords like: Sarkari Naukri, Admit Card, Result, Notes, Questions, Exam Preparation)
+- SEO optimized — naturally use these keywords 5-8 times: ${topic.keywords}
 - 100% original content (no plagiarism)
 - Use latest year references like 2025 or 2026 when relevant
 - Make content engaging and easy to understand for students
 
-TOPIC SELECTION:
-Automatically choose ONE trending topic from:
-1. Study Notes (any subject) with Important Questions with Answers
-2. Admit Card Update
-3. Result Update
-4. Admission Form
-5. Study Notes (any subject)
-6. Important Questions with Answers
-7. Exam Preparation Tips
-8. Career Guidance
+TOPIC (DO NOT CHANGE THIS):
+Write ONLY on this topic: ${topic.category}
+Focus areas: ${topic.hint}
 
-CONTENT STRUCTURE BASED ON TOPIC:
+CONTENT STRUCTURE:
 
-👉 If topic is Job / Admit Card / Result / Admission:
-- Introduction
-- Important Dates
-- Application Fee
-- Age Limit
-- Vacancy Details
-- Selection Process
-- How to Apply
-- Important Links
+👉 Introduction (प्रस्तावना):
+- Topic का महत्व competitive exams में
+- किन exams में यह topic आता है (SSC, Railway, UPSC, Police, Bank etc.)
 
-👉 If topic is Notes:
-- Introduction
-- Definition
-- Key Concepts
-- Examples
-- Summary
+👉 Main Notes (मुख्य नोट्स):
+- Easy Hindi में explanation
+- Important definitions, facts, formulas
+- Tables or bullet points for quick revision
 
-👉 If topic is Questions:
-- Introduction
-- Important Questions with Answers
-- Short Tricks (if possible)
+👉 Important MCQ Questions (महत्वपूर्ण प्रश्न उत्तर):
+- MINIMUM 20 MCQ questions in this EXACT format:
 
-👉 If topic is Tips / Career:
-- Introduction
-- Step-by-step guidance
-- Tips
-- Conclusion
+**Q1. [Question]?**
+- (A) Option1
+- (B) Option2
+- (C) Option3
+- (D) Option4
+✅ **उत्तर: (X) [Correct Answer]**
+💡 **व्याख्या:** [1-2 line explanation in Hindi]
+
+👉 Short Tricks (शॉर्ट ट्रिक्स):
+- Memory tricks in Hindi
+- Mnemonics or shortcuts
+
+👉 Exam Ready Facts (परीक्षा में बार-बार पूछे गए तथ्य):
+- Top 15 most repeated exam facts
+- Bullet list for fast revision
+
+👉 Conclusion (निष्कर्ष):
+- Summary in 2-3 lines
+- "इसे अपने दोस्तों के साथ शेयर करें"
 
 SLUG RULE:
-- Convert title into lowercase
-- Replace spaces with hyphens
-- Remove special characters
+- Use English keywords from topic, lowercase, hyphens only
+- Example: "bhartiya-itihas-gk-questions-hindi-2025"
 
 IMPORTANT:
+- Do NOT change the assigned topic
+- Do NOT include job alerts, admit cards, results, or admission posts
 - Do NOT include anything except JSON
 - Do NOT wrap response in markdown or code block
 - Ensure JSON is valid and parsable
 
 Now generate the blog post.`;
+}
 
 function parseGeneratedJson(raw: string): GeneratedPost | null {
   let text = raw.trim();
@@ -121,7 +150,7 @@ export async function generateBlogPost(): Promise<GeneratedPost | null> {
   const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
   const response = await ai.models.generateContent({
     model,
-    contents: PROMPT,
+    contents: buildPrompt(),
   });
 
   const text = typeof (response as { text?: string }).text === "string"
