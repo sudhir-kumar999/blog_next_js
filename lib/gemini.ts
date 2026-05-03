@@ -115,33 +115,129 @@ IMPORTANT:
 Now generate the blog post.`;
 }
 
+function extractModelText(response: unknown): string {
+  // The @google/genai SDK response shape differs across versions/paths.
+  // We defensively extract the first plausible text we can find.
+  try {
+    const isRecord = (v: unknown): v is Record<string, unknown> =>
+      !!v && typeof v === "object" && !Array.isArray(v);
+    const getRecord = (obj: unknown, key: string): Record<string, unknown> | undefined => {
+      if (!isRecord(obj)) return undefined;
+      const val = obj[key];
+      return isRecord(val) ? val : undefined;
+    };
+    const getString = (obj: unknown, key: string): string | undefined => {
+      if (!isRecord(obj)) return undefined;
+      const val = obj[key];
+      return typeof val === "string" ? val : undefined;
+    };
+    const getFn = (obj: unknown, key: string): ((...args: unknown[]) => unknown) | undefined => {
+      if (!isRecord(obj)) return undefined;
+      const val = obj[key];
+      return typeof val === "function" ? (val as (...args: unknown[]) => unknown) : undefined;
+    };
+    const getArray = (obj: unknown, key: string): unknown[] | undefined => {
+      if (!isRecord(obj)) return undefined;
+      const val = obj[key];
+      return Array.isArray(val) ? val : undefined;
+    };
+
+    const directText = getString(response, "text");
+    if (directText?.trim()) return directText.trim();
+
+    const textFn = getFn(response, "text");
+    if (textFn) {
+      const t = textFn();
+      if (typeof t === "string" && t.trim()) return t.trim();
+    }
+
+    const innerResponse = getRecord(response, "response");
+    if (innerResponse) {
+      const innerTextFn = getFn(innerResponse, "text");
+      if (innerTextFn) {
+        const t = innerTextFn();
+        if (typeof t === "string" && t.trim()) return t.trim();
+      }
+      const innerText = getString(innerResponse, "text");
+      if (innerText?.trim()) return innerText.trim();
+    }
+
+    const extractFromCandidates = (root: unknown): string => {
+      const candidates = getArray(root, "candidates");
+      const first = candidates?.[0];
+      const content = getRecord(first, "content");
+      const parts = getArray(content, "parts");
+      const joined =
+        parts
+          ?.map((p) => {
+            const t = getString(p, "text");
+            return typeof t === "string" ? t : "";
+          })
+          .join("") ?? "";
+      return joined;
+    };
+
+    const candidateText = extractFromCandidates(response);
+    if (candidateText.trim()) return candidateText.trim();
+
+    const nestedCandidateText = extractFromCandidates(innerResponse);
+    if (nestedCandidateText.trim()) return nestedCandidateText.trim();
+  } catch {
+    // ignore
+  }
+  return "";
+}
+
+function tryParseJsonObject(text: string): Record<string, unknown> | null {
+  // 1) Direct parse
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+  } catch {
+    // ignore
+  }
+
+  // 2) If the model added extra prose, try the first {...} block.
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    const candidate = text.slice(firstBrace, lastBrace + 1);
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
+}
+
 function parseGeneratedJson(raw: string): GeneratedPost | null {
   let text = raw.trim();
   const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (codeBlock) text = codeBlock[1].trim();
-  try {
-    const parsed = JSON.parse(text) as Record<string, unknown>;
-    const title = String(parsed.title ?? "").trim();
-    const slug = String(parsed.slug ?? title)
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-    const excerpt = String(parsed.excerpt ?? "").trim();
-    const seo_title = String(parsed.seo_title ?? title).trim();
-    const seo_description = String(parsed.seo_description ?? excerpt).trim();
-    const content = String(parsed.content ?? "").trim();
-    if (!title || !content) return null;
-    return {
-      title,
-      slug: slug || "post-" + Date.now(),
-      excerpt: excerpt || title,
-      seo_title: seo_title || title,
-      seo_description: seo_description || excerpt || title,
-      content,
-    };
-  } catch {
-    return null;
-  }
+  const parsed = tryParseJsonObject(text);
+  if (!parsed) return null;
+
+  const title = String(parsed.title ?? "").trim();
+  const slug = String(parsed.slug ?? title)
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+  const excerpt = String(parsed.excerpt ?? "").trim();
+  const seo_title = String(parsed.seo_title ?? title).trim();
+  const seo_description = String(parsed.seo_description ?? excerpt).trim();
+  const content = String(parsed.content ?? "").trim();
+  if (!title || !content) return null;
+  return {
+    title,
+    slug: slug || "post-" + Date.now(),
+    excerpt: excerpt || title,
+    seo_title: seo_title || title,
+    seo_description: seo_description || excerpt || title,
+    content,
+  };
 }
 
 export async function generateBlogPost(): Promise<GeneratedPost | null> {
@@ -153,16 +249,20 @@ export async function generateBlogPost(): Promise<GeneratedPost | null> {
     contents: buildPrompt(),
   });
 
-  const text = typeof (response as { text?: string }).text === "string"
-    ? (response as { text: string }).text
-    : "";
+  const text = extractModelText(response);
   if (!text) return null;
 
   const post = parseGeneratedJson(text);
-  if (!post) return null;
+  if (!post) {
+    console.error("[gemini] failed to parse JSON. First 600 chars:", text.slice(0, 600));
+    return null;
+  }
 
   const words = countWords(post.content);
-  if (words < MIN_POST_WORDS) return null;
+  if (words < MIN_POST_WORDS) {
+    console.error(`[gemini] generated content too short: ${words} words (min ${MIN_POST_WORDS}).`);
+    return null;
+  }
 
   return post;
 }
