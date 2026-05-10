@@ -106,40 +106,40 @@ export default async function CategoryPage({
     .order("published_at", { ascending: false });
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-24">
-      {/* ================= Header ================= */}
-      <header className="mb-16 text-center">
-        <h1 className="text-4xl font-bold">
-          {category.name}
-        </h1>
-
-        <p className="mt-4 text-zinc-600">
-          Articles related to {category.name}
-        </p>
-      </header>
-
-      {/* ================= Posts ================= */}
-      <section className="space-y-10">
-        {posts?.map((post) => (
-          <BlogCard key={post.id} post={post} />
-        ))}
-
-        {posts?.length === 0 && (
-          <p className="text-center text-zinc-500">
-            No posts found in this category.
+    <div className="min-h-screen bg-white">
+      <section className="border-b border-zinc-100 bg-gradient-to-b from-zinc-50 to-white py-16 sm:py-20">
+        <div className="mx-auto max-w-4xl px-6 text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-black sm:text-5xl">
+            {category.name}
+          </h1>
+          <p className="mt-4 text-zinc-600 sm:text-lg">
+            Latest articles in {category.name}
           </p>
-        )}
+          <div className="mt-8">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50"
+            >
+              <span aria-hidden="true">←</span> Back to Blog
+            </Link>
+          </div>
+        </div>
       </section>
 
-      {/* ================= Back link ================= */}
-      <div className="mt-16 text-center">
-        <Link
-          href="/blog"
-          className="text-sm font-medium text-blue-600 hover:underline"
-        >
-          ← Back to Blog
-        </Link>
-      </div>
-    </main>
+      <main className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
+        {posts && posts.length > 0 ? (
+          <section className="grid gap-6 sm:grid-cols-2">
+            {posts.map((post) => (
+              <BlogCard key={post.id} post={post} />
+            ))}
+          </section>
+        ) : (
+          <div className="py-20 text-center">
+            <h2 className="text-2xl font-bold text-zinc-800">No posts yet</h2>
+            <p className="mt-2 text-zinc-500">Check back soon for new articles.</p>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

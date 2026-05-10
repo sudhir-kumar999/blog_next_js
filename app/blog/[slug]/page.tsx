@@ -154,6 +154,7 @@ export default async function BlogPostPage({
 
   const postUrl = `${baseUrl}/blog/${slug}`;
   const wordCount = countWords(post.content || "");
+  const readingMinutes = Math.max(1, Math.round(wordCount / 220));
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -264,19 +265,48 @@ export default async function BlogPostPage({
                 {post.title}
               </h1>
 
-              {post.featured_image && (
+              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-600">
+                <time dateTime={post.published_at} className="inline-flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" aria-hidden="true" />
+                  {new Date(post.published_at).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </time>
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" aria-hidden="true" />
+                  {readingMinutes} min read
+                </span>
+                {wordCount > 0 && (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" aria-hidden="true" />
+                    {wordCount.toLocaleString()} words
+                  </span>
+                )}
+              </div>
+
+              {post.featured_image ? (
                 <img
                   src={post.featured_image}
                   alt={post.title}
-                  className="mt-6 w-full rounded-2xl object-cover"
+                  className="mt-7 w-full rounded-2xl border border-zinc-200 object-cover shadow-sm"
                   loading="eager"
                   itemProp="image"
                 />
+              ) : (
+                <div className="mt-7 overflow-hidden rounded-2xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-white">
+                  <div className="p-8 sm:p-10">
+                    <p className="text-sm font-semibold text-zinc-700">StudyMitra</p>
+                    <p className="mt-2 text-2xl font-bold leading-snug text-black">{post.title}</p>
+                    {post.excerpt && <p className="mt-3 text-sm text-zinc-600 line-clamp-3">{post.excerpt}</p>}
+                  </div>
+                </div>
               )}
 
               {post.excerpt && (
                 <p
-                  className="mt-4 text-lg text-zinc-600 leading-relaxed"
+                  className="mt-6 text-lg text-zinc-600 leading-relaxed"
                   itemProp="description"
                 >
                   {post.excerpt}
