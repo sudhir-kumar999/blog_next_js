@@ -10,16 +10,7 @@
   --ring: #2563eb; /* blue-600 */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b; /* zinc-950 */
-    --foreground: #fafafa; /* zinc-50 */
-    --muted: #d4d4d8; /* zinc-300 */
-    --muted-2: #a1a1aa; /* zinc-400 */
-    --border: #27272a; /* zinc-800 */
-    --ring: #60a5fa; /* blue-400 */
-  }
-}
+/* Keep a consistent light theme across devices. */
 
 body {
   background: var(--background);
