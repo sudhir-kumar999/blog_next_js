@@ -221,8 +221,19 @@ function tryParseJsonObject(text: string): Record<string, unknown> | null {
 
 function parseGeneratedJson(raw: string): GeneratedPost | null {
   let text = raw.trim();
-  const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (codeBlock) text = codeBlock[1].trim();
+  // Strip markdown code fences if the model wraps JSON in ```json ...```.
+  // Sometimes the closing fence is missing in truncated outputs, so handle both cases.
+  if (text.startsWith("```")) {
+    // Remove the opening fence line: ``` or ```json
+    const firstNewline = text.indexOf("\n");
+    if (firstNewline >= 0) text = text.slice(firstNewline + 1).trim();
+    // Remove a trailing closing fence if present
+    const lastFence = text.lastIndexOf("```");
+    if (lastFence >= 0) text = text.slice(0, lastFence).trim();
+  } else {
+    const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlock) text = codeBlock[1].trim();
+  }
   const parsed = tryParseJsonObject(text);
   if (!parsed) return null;
 
@@ -261,6 +272,21 @@ export async function generateBlogPost(): Promise<
       maxOutputTokens: 8192,
       temperature: 0.7,
       topP: 0.95,
+      // Ask the SDK/model to return JSON (reduces ```json fences and extra prose).
+      responseMimeType: "application/json",
+      responseJsonSchema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["title", "slug", "excerpt", "seo_title", "seo_description", "content"],
+        properties: {
+          title: { type: "string" },
+          slug: { type: "string" },
+          excerpt: { type: "string" },
+          seo_title: { type: "string" },
+          seo_description: { type: "string" },
+          content: { type: "string" },
+        },
+      },
     },
   });
 
