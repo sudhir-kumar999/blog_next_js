@@ -14,9 +14,9 @@ const renderer = new marked.Renderer();
 // };
 
 /* ---------------- PARAGRAPH ---------------- */
-renderer.paragraph = ({ tokens }) => {
-  const text = tokens.map((t) => t.raw).join("");
-  return `<p class="my-5 leading-8">${text}</p>`;
+renderer.paragraph = function ({ tokens }) {
+  const html = this.parser.parseInline(tokens);
+  return `<p class="my-5 leading-8">${html}</p>`;
 };
 
 /* ---------------- LIST ---------------- */
@@ -27,9 +27,10 @@ renderer.list = ({ items, ordered }) => {
   return `<${tag} class="my-5 pl-6 list-disc">${body}</${tag}>`;
 };
 
-renderer.listitem = ({ tokens }) => {
-  const text = tokens.map((t) => t.raw).join("");
-  return `<li class="mb-2">${text}</li>`;
+renderer.listitem = function ({ tokens }) {
+  // list item tokens can include nested list tokens; parse full tokens safely.
+  const html = this.parser.parse(tokens);
+  return `<li class="mb-2">${html}</li>`;
 };
 
 /* ---------------- TABLE ---------------- */
@@ -80,8 +81,8 @@ renderer.image = ({ href, text }) => {
 };
 
 /* ---------------- LINK ---------------- */
-renderer.link = ({ href, tokens }) => {
-  const text = tokens.map((t) => t.raw).join("");
+renderer.link = function ({ href, tokens }) {
+  const text = this.parser.parseInline(tokens);
   const external = href?.startsWith("http");
 
   return `<a href="${href}" ${

@@ -38,20 +38,18 @@ export default function Navbar() {
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (openMobile) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [openMobile]);
 
-  if (loading) return null;
-
   return (
     <>
-      <header className="relative w-full border-b border-zinc-200 bg-white/95 backdrop-blur-md">
+      <header className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/95 backdrop-blur-md">
         <nav className="mx-auto max-w-6xl px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -124,7 +122,12 @@ export default function Navbar() {
 
             {/* ================= DESKTOP AUTH ================= */}
             <div className="hidden items-center gap-3 md:flex">
-              {isLoggedIn ? (
+              {loading ? (
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-24 animate-pulse rounded-lg bg-zinc-100" />
+                  <div className="h-9 w-20 animate-pulse rounded-lg bg-zinc-100" />
+                </div>
+              ) : isLoggedIn ? (
                 <>
                   {role === "admin" && (
                     <Link
@@ -260,7 +263,12 @@ export default function Navbar() {
 
                 {/* Auth Section */}
                 <div className="mt-6 space-y-2 border-t border-zinc-200 pt-6">
-                  {isLoggedIn ? (
+                  {loading ? (
+                    <div className="space-y-2">
+                      <div className="h-11 w-full animate-pulse rounded-lg bg-zinc-100" />
+                      <div className="h-11 w-full animate-pulse rounded-lg bg-zinc-100" />
+                    </div>
+                  ) : isLoggedIn ? (
                     <>
                       {role === "admin" && (
                         <Link
