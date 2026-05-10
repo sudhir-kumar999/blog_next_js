@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   },
   description: "सरकारी योजनाएं, परीक्षा की तैयारी, और शिक्षा से जुड़ी जानकारी हिंदी में — StudyMitra पर पढ़ें।",
   robots: { index: true, follow: true },
+  other: {
+    "google-adsense-account": "ca-pub-8512064525174724",
+  },
   verification: {
     google: "C5p3Z0zxSQIohmRRIADX9u0Sn-8YlWcZ_JV0N3ftvvA",
   },
@@ -44,6 +47,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8512064525174724"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-W2MN41PJ83"
           strategy="afterInteractive"

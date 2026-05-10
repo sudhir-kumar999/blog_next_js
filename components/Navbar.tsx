@@ -56,7 +56,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="text-xl font-bold tracking-tight text-black transition-colors hover:text-blue-600">
-              MyBlog
+              StudyMitra
             </Link>
 
             {/* ================= DESKTOP NAV ================= */}

@@ -13,6 +13,7 @@ export async function GET(req: Request) {
   const secret = authHeader?.replace("Bearer ", "").trim();
 
   if (!CRON_SECRET || secret !== CRON_SECRET) {
+    console.error("[generate-and-publish] unauthorized: missing/invalid Authorization header");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -24,13 +25,26 @@ export async function GET(req: Request) {
   }
 
   try {
-    const post = await generateBlogPost();
+    // Gemini generation can occasionally fail due to JSON formatting or short output.
+    // Retry a few times so the cron is more reliable day-to-day.
+    let post = null as Awaited<ReturnType<typeof generateBlogPost>>;
+    const attempts = 3;
+    for (let i = 1; i <= attempts; i++) {
+      post = await generateBlogPost();
+      if (post) break;
+      console.error(`[generate-and-publish] gemini generation failed (attempt ${i}/${attempts})`);
+    }
+
     if (!post) {
-      return NextResponse.json({
-        ok: false,
-        message: "Gemini could not generate a valid post (or word count < 1500).",
-        published: null,
-      });
+      // Non-2xx so Vercel Cron shows this run as a failure.
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Gemini could not generate a valid post (JSON parse failed or word count too low).",
+          published: null,
+        },
+        { status: 503 }
+      );
     }
 
     let slug = post.slug;

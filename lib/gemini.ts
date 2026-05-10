@@ -247,6 +247,12 @@ export async function generateBlogPost(): Promise<GeneratedPost | null> {
   const response = await ai.models.generateContent({
     model,
     contents: buildPrompt(),
+    // Increase output budget so the model can consistently reach 1500+ words.
+    config: {
+      maxOutputTokens: 8192,
+      temperature: 0.7,
+      topP: 0.95,
+    },
   });
 
   const text = extractModelText(response);
