@@ -13,6 +13,12 @@ export interface GeneratedPost {
   content: string;
 }
 
+export type GenerateBlogPostFailure =
+  | { kind: "missing_api_key" }
+  | { kind: "empty_model_text" }
+  | { kind: "json_parse_failed"; preview: string }
+  | { kind: "too_short"; words: number; minWords: number };
+
 const COMPETITION_TOPICS = [
   { category: "सामान्य ज्ञान - भारतीय इतिहास", keywords: "Indian History GK, भारतीय इतिहास प्रश्न उत्तर, SSC History MCQ", hint: "Mughal Empire, Freedom Movement, Ancient India, Medieval India" },
   { category: "सामान्य ज्ञान - भूगोल", keywords: "Geography GK Hindi, भूगोल प्रश्न उत्तर, Railway Geography MCQ", hint: "Rivers, Mountains, States, Climate, National Parks" },
@@ -240,8 +246,11 @@ function parseGeneratedJson(raw: string): GeneratedPost | null {
   };
 }
 
-export async function generateBlogPost(): Promise<GeneratedPost | null> {
-  if (!GEMINI_API_KEY) return null;
+export async function generateBlogPost(): Promise<
+  | { ok: true; post: GeneratedPost }
+  | { ok: false; failure: GenerateBlogPostFailure }
+> {
+  if (!GEMINI_API_KEY) return { ok: false, failure: { kind: "missing_api_key" } };
 
   const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
   const response = await ai.models.generateContent({
@@ -256,19 +265,20 @@ export async function generateBlogPost(): Promise<GeneratedPost | null> {
   });
 
   const text = extractModelText(response);
-  if (!text) return null;
+  if (!text) return { ok: false, failure: { kind: "empty_model_text" } };
 
   const post = parseGeneratedJson(text);
   if (!post) {
-    console.error("[gemini] failed to parse JSON. First 600 chars:", text.slice(0, 600));
-    return null;
+    const preview = text.slice(0, 600);
+    console.error("[gemini] failed to parse JSON. First 600 chars:", preview);
+    return { ok: false, failure: { kind: "json_parse_failed", preview } };
   }
 
   const words = countWords(post.content);
   if (words < MIN_POST_WORDS) {
     console.error(`[gemini] generated content too short: ${words} words (min ${MIN_POST_WORDS}).`);
-    return null;
+    return { ok: false, failure: { kind: "too_short", words, minWords: MIN_POST_WORDS } };
   }
 
-  return post;
+  return { ok: true, post };
 }
