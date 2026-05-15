@@ -1,20 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
+import { GOOGLE_SAFE_RULES, VIRAL_SEO_RULES } from "./google-safe-prompt";
 import { fetchIndiaNewsHeadlines } from "./news-headlines";
+import { enrichPostForSeo, validatePostQuality, type PostQualityFailure } from "./post-quality";
 import { countWords, MIN_POST_WORDS } from "./wordCount";
 
-// Single fast model — trying multiple models adds latency and risks timeout.
-const DEFAULT_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"] as const;
+// One model = fewer API calls (helps avoid quota suspension). Set GEMINI_FALLBACK_MODEL for backup.
+const DEFAULT_MODELS = ["gemini-2.5-flash"] as const;
 const MAX_OUTPUT_TOKENS = 16384;
+const MAX_GENERATION_ATTEMPTS = 2;
 
 function getGeminiApiKey(): string | undefined {
   const key = process.env.GEMINI_API_KEY?.trim();
   return key || undefined;
-}
-
-function getGeminiModels(): string[] {
-  const fromEnv = process.env.GEMINI_MODEL?.trim();
-  if (fromEnv) return [fromEnv, ...DEFAULT_MODELS.filter((m) => m !== fromEnv)];
-  return [...DEFAULT_MODELS];
 }
 
 export function getGeminiKeyFingerprint(): string | null {
@@ -35,11 +32,27 @@ export interface GeneratedPost {
 export type GenerateBlogPostFailure =
   | { kind: "missing_api_key" }
   | { kind: "project_suspended"; projectId?: string }
+  | { kind: "quota_exceeded" }
   | { kind: "api_error"; status?: number; message: string }
   | { kind: "empty_model_text" }
   | { kind: "truncated_response" }
   | { kind: "json_parse_failed"; preview: string }
-  | { kind: "too_short"; words: number; minWords: number };
+  | { kind: "too_short"; words: number; minWords: number }
+  | { kind: "content_blocked"; reason: string };
+
+function getGeminiModels(): string[] {
+  const fromEnv = process.env.GEMINI_MODEL?.trim();
+  const fallback = process.env.GEMINI_FALLBACK_MODEL?.trim();
+  const models: string[] = [];
+  if (fromEnv) models.push(fromEnv);
+  else models.push(...DEFAULT_MODELS);
+  if (fallback && !models.includes(fallback)) models.push(fallback);
+  else if (!fromEnv) {
+    const extra = DEFAULT_MODELS.filter((m) => !models.includes(m));
+    models.push(...extra);
+  }
+  return models;
+}
 
 function isRetryableFailure(failure: GenerateBlogPostFailure): boolean {
   return (
@@ -65,12 +78,22 @@ function parseGeminiApiError(err: unknown): GenerateBlogPostFailure {
     };
   }
 
+  if (
+    /RESOURCE_EXHAUSTED|quota exceeded|rate limit|429|too many requests/i.test(sanitized)
+  ) {
+    return { kind: "quota_exceeded" };
+  }
+
   let status: number | undefined;
   const statusMatch = sanitized.match(/"code":\s*(\d{3})/);
   if (statusMatch) status = Number(statusMatch[1]);
 
   const messageMatch = sanitized.match(/"message":\s*"([^"]+)"/);
   const apiMessage = messageMatch?.[1];
+
+  if (status === 429) {
+    return { kind: "quota_exceeded" };
+  }
 
   if (status === 404 || /is not found for API version/i.test(sanitized)) {
     return {
@@ -653,7 +676,10 @@ Focus: ${topic.hint}
 Keywords (6-10x): ${topic.keywords}
 
 RULES: Hindi (Devanagari) | Min ${minWords} words | Share-worthy
-${isNews ? "NEWS RULES: Use latest real trends for India. No fake death/riot news. No political hate. If exact number unknown, say 'reports ke mutabik'. Include date in intro." : isGeneral ? "No fake celebrity gossip." : "Exam-useful. No fake vacancies."}
+${isNews ? "NEWS: Factual only. Say 'reports ke mutabik' for uncertain numbers. Include today's date." : isGeneral ? "Helpful lifestyle content only." : "Exam-useful. No fake vacancies."}
+
+${GOOGLE_SAFE_RULES}
+${VIRAL_SEO_RULES}
 
 ${buildContentStructure(topic.topicType, mcqCount, factCount)}
 
@@ -872,7 +898,10 @@ async function attemptGenerate(
     } catch (err) {
       lastApiFailure = parseGeminiApiError(err);
       console.error(`[gemini] model ${model} failed:`, lastApiFailure);
-      if (lastApiFailure.kind === "project_suspended") {
+      if (
+        lastApiFailure.kind === "project_suspended" ||
+        lastApiFailure.kind === "quota_exceeded"
+      ) {
         return { ok: false, failure: lastApiFailure };
       }
       if (!isModelNotFoundFailure(lastApiFailure)) {
@@ -888,6 +917,14 @@ async function attemptGenerate(
         kind: "api_error",
         message: "Gemini API request failed. Set GEMINI_MODEL=gemini-2.5-flash in Vercel.",
       },
+    };
+  }
+
+  const finishReason = extractFinishReason(response);
+  if (finishReason === "SAFETY" || finishReason === "RECITATION") {
+    return {
+      ok: false,
+      failure: { kind: "content_blocked", reason: `Model blocked output: ${finishReason}` },
     };
   }
 
@@ -913,7 +950,30 @@ async function attemptGenerate(
     return { ok: false, failure: { kind: "too_short", words, minWords } };
   }
 
-  return { ok: true, post };
+  const enriched = enrichPostForSeo(post);
+  const qualityIssue = validatePostQuality(enriched);
+  if (qualityIssue) {
+    const reason = qualityFailureToMessage(qualityIssue);
+    console.error("[gemini] content quality blocked:", reason);
+    return { ok: false, failure: { kind: "content_blocked", reason } };
+  }
+
+  return { ok: true, post: enriched };
+}
+
+function qualityFailureToMessage(f: PostQualityFailure): string {
+  switch (f.kind) {
+    case "blocked_content":
+      return f.reason;
+    case "sensitive_news":
+      return "Sensitive news topic — skipped for policy safety";
+    case "too_short":
+      return `Too short: ${f.words} words`;
+    case "invalid_title":
+      return "Invalid or missing title";
+    default:
+      return "Content quality check failed";
+  }
 }
 
 export async function generateBlogPost(options?: { slot?: PostSlot }): Promise<
@@ -928,13 +988,20 @@ export async function generateBlogPost(options?: { slot?: PostSlot }): Promise<
     process.env.GEMINI_COMPACT === "1" || process.env.GEMINI_COMPACT === "true";
   const modes: boolean[] = forceCompact ? [true] : [false, true];
   let lastFailure: GenerateBlogPostFailure | null = null;
+  let attempts = 0;
 
   for (const compact of modes) {
+    if (attempts >= MAX_GENERATION_ATTEMPTS) break;
+    attempts++;
+
     const result = await attemptGenerate(apiKey, compact, slot);
     if (result.ok) return { ...result, slot };
 
     lastFailure = result.failure;
-    if (result.failure.kind === "project_suspended") {
+    if (
+      result.failure.kind === "project_suspended" ||
+      result.failure.kind === "quota_exceeded"
+    ) {
       return result;
     }
     if (!isRetryableFailure(result.failure)) {

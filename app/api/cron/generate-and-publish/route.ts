@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { canRunCronPublish } from "@/lib/cron-guard";
 import { generateBlogPost, parsePostSlot, type PostSlot } from "@/lib/gemini";
 import { supabaseServer } from "@/lib/supabase/server";
 
@@ -36,6 +37,16 @@ export async function GET(req: Request) {
 
   try {
     const slot: PostSlot = parsePostSlot(req);
+
+    const guard = await canRunCronPublish(slot);
+    if (!guard.ok) {
+      console.warn("[generate-and-publish] skipped:", guard.reason);
+      return NextResponse.json(
+        { ok: false, skipped: true, message: guard.reason, published: null },
+        { status: 200 }
+      );
+    }
+
     const res = await generateBlogPost({ slot });
     const post = res.ok ? res : null;
     const lastFailure = res.ok ? null : res.failure;
@@ -55,6 +66,31 @@ export async function GET(req: Request) {
             published: null,
           },
           { status: 403 }
+        );
+      }
+
+      if (failure?.kind === "quota_exceeded") {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Gemini API quota/rate limit reached. Wait a few hours — do not retry rapidly or Google may suspend your project.",
+            reason: "QUOTA_EXCEEDED",
+            published: null,
+          },
+          { status: 429 }
+        );
+      }
+
+      if (failure?.kind === "content_blocked") {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Generated content failed safety check. Try again at next cron slot.",
+            reason: failure,
+            published: null,
+          },
+          { status: 422 }
         );
       }
 

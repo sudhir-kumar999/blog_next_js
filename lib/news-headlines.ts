@@ -1,3 +1,27 @@
+/** Skip sensational/violent headlines — safer for Google policies & brand */
+const BLOCKED_HEADLINE_PATTERNS: RegExp[] = [
+  /hatya|हत्या|rape|बलात्कार|lynch|terror|आत्महत्या|suicide|murder|riot|दंगा/i,
+  /graphic|gore|explicit/i,
+];
+
+/** Prefer these topics — high search, low policy risk */
+const PREFERRED_HEADLINE_PATTERNS: RegExp[] = [
+  /petrol|diesel|पेट्रोल|डीजल|gold|सोना|silver|चांदी|weather|मौसम|rain|बारिश/i,
+  /RBI|bank|बैंक|budget|बजट|cricket|क्रिकेट|IPL|exam|परीक्षा|SSC|UPSC|railway/i,
+  /price|rate|भाव|कीमत|inflation|महंगाई|scheme|योजना|PM\s|modi|India/i,
+];
+
+function filterSafeHeadlines(headlines: string[]): string[] {
+  const safe = headlines.filter(
+    (h) => !BLOCKED_HEADLINE_PATTERNS.some((p) => p.test(h))
+  );
+  const preferred = safe.filter((h) =>
+    PREFERRED_HEADLINE_PATTERNS.some((p) => p.test(h))
+  );
+  const rest = safe.filter((h) => !preferred.includes(h));
+  return [...preferred, ...rest];
+}
+
 /** Fetch latest India headlines from Google News RSS (no API key). */
 export async function fetchIndiaNewsHeadlines(limit = 10): Promise<string[]> {
   try {
@@ -29,7 +53,7 @@ export async function fetchIndiaNewsHeadlines(limit = 10): Promise<string[]> {
       if (titles.length >= limit) break;
     }
 
-    return titles;
+    return filterSafeHeadlines(titles).slice(0, limit);
   } catch (err) {
     console.error("[news-headlines] fetch failed:", err);
     return [];
