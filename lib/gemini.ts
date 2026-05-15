@@ -1,8 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 import { countWords, MIN_POST_WORDS } from "./wordCount";
 
-// gemini-1.5-flash is removed from v1beta for new API keys — use 2.5 / 2.0 only.
-const DEFAULT_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-001"] as const;
+// Single fast model — trying multiple models adds latency and risks timeout.
+const DEFAULT_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"] as const;
+const MAX_OUTPUT_TOKENS = 16384;
 
 function getGeminiApiKey(): string | undefined {
   const key = process.env.GEMINI_API_KEY?.trim();
@@ -35,8 +36,17 @@ export type GenerateBlogPostFailure =
   | { kind: "project_suspended"; projectId?: string }
   | { kind: "api_error"; status?: number; message: string }
   | { kind: "empty_model_text" }
+  | { kind: "truncated_response" }
   | { kind: "json_parse_failed"; preview: string }
   | { kind: "too_short"; words: number; minWords: number };
+
+function isRetryableFailure(failure: GenerateBlogPostFailure): boolean {
+  return (
+    failure.kind === "json_parse_failed" ||
+    failure.kind === "truncated_response" ||
+    failure.kind === "too_short"
+  );
+}
 
 function parseGeminiApiError(err: unknown): GenerateBlogPostFailure {
   const raw = err instanceof Error ? err.message : String(err);
@@ -145,8 +155,11 @@ function getTodaysTopic() {
   return COMPETITION_TOPICS[finalIndex];
 }
 
-function buildPrompt(): string {
+function buildPrompt(compact = false): string {
   const topic = getTodaysTopic();
+  const minWords = compact ? 1200 : MIN_POST_WORDS;
+  const mcqCount = compact ? 10 : 12;
+  const factCount = compact ? 8 : 10;
 
   return `You are an expert Hindi blog writer for an Indian education website like Study Mitra, Sarkari Result, or Result Bharat. Your audience is Indian students preparing for exams, competitive exams, and general learning.
 
@@ -161,7 +174,7 @@ Generate ONE complete blog post. Return ONLY a valid JSON object (no markdown bl
 
 CONTENT RULES:
 - Write in simple Hindi (Devanagari script)
-- Content MUST be at least ${MIN_POST_WORDS} words
+- Content MUST be at least ${minWords} words (count only the "content" field)
 - Use clear headings (##, ###), short paragraphs, and bullet points
 - SEO optimized — naturally use these keywords 5-8 times: ${topic.keywords}
 - 100% original content (no plagiarism)
@@ -184,7 +197,7 @@ CONTENT STRUCTURE:
 - Tables or bullet points for quick revision
 
 👉 Important MCQ Questions (महत्वपूर्ण प्रश्न उत्तर):
-- MINIMUM 20 MCQ questions in this EXACT format:
+- Exactly ${mcqCount} MCQ questions (not more) in this EXACT format:
 
 **Q1. [Question]?**
 - (A) Option1
@@ -199,7 +212,7 @@ CONTENT STRUCTURE:
 - Mnemonics or shortcuts
 
 👉 Exam Ready Facts (परीक्षा में बार-बार पूछे गए तथ्य):
-- Top 15 most repeated exam facts
+- Top ${factCount} most repeated exam facts
 - Bullet list for fast revision
 
 👉 Conclusion (निष्कर्ष):
@@ -216,8 +229,34 @@ IMPORTANT:
 - Do NOT include anything except JSON
 - Do NOT wrap response in markdown or code block
 - Ensure JSON is valid and parsable
+- CRITICAL: Return the COMPLETE JSON in one response — never cut off mid-string. Finish "content" and close all braces.
 
 Now generate the blog post.`;
+}
+
+function extractFinishReason(response: unknown): string | undefined {
+  try {
+    const isRecord = (v: unknown): v is Record<string, unknown> =>
+      !!v && typeof v === "object" && !Array.isArray(v);
+    const root = isRecord(response) ? response : undefined;
+    const candidates = root?.candidates;
+    if (!Array.isArray(candidates) || !candidates[0]) return undefined;
+    const first = candidates[0];
+    if (!isRecord(first)) return undefined;
+    const reason = first.finishReason ?? first.finish_reason;
+    return typeof reason === "string" ? reason : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function isTruncatedResponse(response: unknown, text: string): boolean {
+  const reason = extractFinishReason(response);
+  if (reason === "MAX_TOKENS" || reason === "max_tokens") return true;
+  const trimmed = text.trim();
+  if (!trimmed.startsWith("{")) return false;
+  if (trimmed.endsWith("}")) return false;
+  return true;
 }
 
 function extractModelText(response: unknown): string {
@@ -358,14 +397,15 @@ function parseGeneratedJson(raw: string): GeneratedPost | null {
 
 async function generateWithModel(
   ai: GoogleGenAI,
-  model: string
+  model: string,
+  compact: boolean
 ): Promise<Awaited<ReturnType<typeof ai.models.generateContent>>> {
   return ai.models.generateContent({
     model,
-    contents: buildPrompt(),
+    contents: buildPrompt(compact),
     config: {
-      maxOutputTokens: 8192,
-      temperature: 0.7,
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
+      temperature: 0.6,
       topP: 0.95,
       responseMimeType: "application/json",
       responseJsonSchema: {
@@ -385,25 +425,28 @@ async function generateWithModel(
   });
 }
 
-export async function generateBlogPost(): Promise<
+async function attemptGenerate(
+  apiKey: string,
+  compact: boolean
+): Promise<
   | { ok: true; post: GeneratedPost }
   | { ok: false; failure: GenerateBlogPostFailure }
 > {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) return { ok: false, failure: { kind: "missing_api_key" } };
-
   const ai = new GoogleGenAI({ apiKey });
   let response: Awaited<ReturnType<typeof ai.models.generateContent>> | null = null;
   let lastApiFailure: GenerateBlogPostFailure | null = null;
 
   for (const model of getGeminiModels()) {
     try {
-      response = await generateWithModel(ai, model);
+      response = await generateWithModel(ai, model, compact);
       break;
     } catch (err) {
       lastApiFailure = parseGeminiApiError(err);
       console.error(`[gemini] model ${model} failed:`, lastApiFailure);
       if (lastApiFailure.kind === "project_suspended") {
+        return { ok: false, failure: lastApiFailure };
+      }
+      if (!isModelNotFoundFailure(lastApiFailure)) {
         return { ok: false, failure: lastApiFailure };
       }
     }
@@ -414,14 +457,18 @@ export async function generateBlogPost(): Promise<
       ok: false,
       failure: lastApiFailure ?? {
         kind: "api_error",
-        message:
-          "All Gemini models failed. Add GEMINI_MODEL=gemini-2.5-flash in Vercel env and redeploy.",
+        message: "Gemini API request failed. Set GEMINI_MODEL=gemini-2.5-flash in Vercel.",
       },
     };
   }
 
   const text = extractModelText(response);
   if (!text) return { ok: false, failure: { kind: "empty_model_text" } };
+
+  if (isTruncatedResponse(response, text)) {
+    console.error("[gemini] response truncated (MAX_TOKENS or incomplete JSON)");
+    return { ok: false, failure: { kind: "truncated_response" } };
+  }
 
   const post = parseGeneratedJson(text);
   if (!post) {
@@ -430,11 +477,41 @@ export async function generateBlogPost(): Promise<
     return { ok: false, failure: { kind: "json_parse_failed", preview } };
   }
 
+  const minWords = compact ? 1200 : MIN_POST_WORDS;
   const words = countWords(post.content);
-  if (words < MIN_POST_WORDS) {
-    console.error(`[gemini] generated content too short: ${words} words (min ${MIN_POST_WORDS}).`);
-    return { ok: false, failure: { kind: "too_short", words, minWords: MIN_POST_WORDS } };
+  if (words < minWords) {
+    console.error(`[gemini] generated content too short: ${words} words (min ${minWords}).`);
+    return { ok: false, failure: { kind: "too_short", words, minWords } };
   }
 
   return { ok: true, post };
+}
+
+export async function generateBlogPost(): Promise<
+  | { ok: true; post: GeneratedPost }
+  | { ok: false; failure: GenerateBlogPostFailure }
+> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) return { ok: false, failure: { kind: "missing_api_key" } };
+
+  const forceCompact =
+    process.env.GEMINI_COMPACT === "1" || process.env.GEMINI_COMPACT === "true";
+  const modes: boolean[] = forceCompact ? [true] : [false, true];
+  let lastFailure: GenerateBlogPostFailure | null = null;
+
+  for (const compact of modes) {
+    const result = await attemptGenerate(apiKey, compact);
+    if (result.ok) return result;
+
+    lastFailure = result.failure;
+    if (result.failure.kind === "project_suspended") {
+      return result;
+    }
+    if (!isRetryableFailure(result.failure)) {
+      return result;
+    }
+    console.error(`[gemini] attempt failed (compact=${compact}), retrying...`, result.failure.kind);
+  }
+
+  return { ok: false, failure: lastFailure ?? { kind: "api_error", message: "Generation failed" } };
 }

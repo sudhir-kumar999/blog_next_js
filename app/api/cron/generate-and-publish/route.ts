@@ -14,7 +14,9 @@ function projectSuspendedMessage(projectId?: string): string {
 }
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const runtime = "nodejs";
+// Long Hindi posts need >60s. Requires Vercel Pro for 300s (Hobby max is 60s).
+export const maxDuration = 300;
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -33,22 +35,15 @@ export async function GET(req: Request) {
   }
 
   try {
-    // Gemini generation can occasionally fail due to JSON formatting or short output.
-    // Retry a few times so the cron is more reliable day-to-day.
-    let post: Awaited<ReturnType<typeof generateBlogPost>> | null = null;
-    let lastFailure: unknown = null;
-    const attempts = 3;
-    for (let i = 1; i <= attempts; i++) {
-      const res = await generateBlogPost();
-      if (res.ok) {
-        post = res;
-        break;
-      }
-      lastFailure = res.failure;
-      console.error(`[generate-and-publish] gemini generation failed (attempt ${i}/${attempts})`, res.failure);
-    }
+    // generateBlogPost retries internally with a shorter prompt if JSON is truncated.
+    const res = await generateBlogPost();
+    const post = res.ok ? res : null;
+    const lastFailure = res.ok ? null : res.failure;
 
     if (!post) {
+      if (lastFailure) {
+        console.error("[generate-and-publish] gemini generation failed", lastFailure);
+      }
       const failure = lastFailure as { kind?: string; projectId?: string } | null;
 
       if (failure?.kind === "project_suspended") {
