@@ -1,8 +1,12 @@
 {
   "crons": [
     {
-      "path": "/api/cron/generate-and-publish",
+      "path": "/api/cron/generate-and-publish?slot=0",
       "schedule": "30 0 * * *"
+    },
+    {
+      "path": "/api/cron/generate-and-publish?slot=1",
+      "schedule": "30 9 * * *"
     }
   ],
   "functions": {
