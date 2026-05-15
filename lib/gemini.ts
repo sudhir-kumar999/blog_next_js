@@ -1,7 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { countWords, MIN_POST_WORDS } from "./wordCount";
 
-const DEFAULT_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"] as const;
+// gemini-1.5-flash is removed from v1beta for new API keys — use 2.5 / 2.0 only.
+const DEFAULT_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-001"] as const;
 
 function getGeminiApiKey(): string | undefined {
   const key = process.env.GEMINI_API_KEY?.trim();
@@ -57,11 +58,26 @@ function parseGeminiApiError(err: unknown): GenerateBlogPostFailure {
   const statusMatch = sanitized.match(/"code":\s*(\d{3})/);
   if (statusMatch) status = Number(statusMatch[1]);
 
+  const messageMatch = sanitized.match(/"message":\s*"([^"]+)"/);
+  const apiMessage = messageMatch?.[1];
+
+  if (status === 404 || /is not found for API version/i.test(sanitized)) {
+    return {
+      kind: "api_error",
+      status: 404,
+      message: apiMessage ?? "Gemini model not found — will try next model",
+    };
+  }
+
   return {
     kind: "api_error",
     status,
-    message: sanitized.slice(0, 400) || "Gemini API request failed",
+    message: apiMessage ?? (sanitized.slice(0, 400) || "Gemini API request failed"),
   };
+}
+
+function isModelNotFoundFailure(failure: GenerateBlogPostFailure): boolean {
+  return failure.kind === "api_error" && failure.status === 404;
 }
 
 export async function testGeminiConnection(): Promise<
@@ -85,6 +101,10 @@ export async function testGeminiConnection(): Promise<
       if (failure.kind === "project_suspended") {
         return { ok: false, failure };
       }
+      // Try next model on 404 (model name not available for this API key).
+      if (!isModelNotFoundFailure(failure)) {
+        return { ok: false, failure };
+      }
     }
   }
 
@@ -92,7 +112,8 @@ export async function testGeminiConnection(): Promise<
     ok: false,
     failure: {
       kind: "api_error",
-      message: "All configured Gemini models failed. Check GEMINI_API_KEY and billing.",
+      message:
+        "No Gemini model worked. Set GEMINI_MODEL=gemini-2.5-flash in Vercel and redeploy.",
     },
   };
 }
@@ -391,7 +412,11 @@ export async function generateBlogPost(): Promise<
   if (!response) {
     return {
       ok: false,
-      failure: lastApiFailure ?? { kind: "api_error", message: "Gemini API request failed" },
+      failure: lastApiFailure ?? {
+        kind: "api_error",
+        message:
+          "All Gemini models failed. Add GEMINI_MODEL=gemini-2.5-flash in Vercel env and redeploy.",
+      },
     };
   }
 
