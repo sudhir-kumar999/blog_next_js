@@ -1,8 +1,24 @@
 import { GoogleGenAI } from "@google/genai";
 import { countWords, MIN_POST_WORDS } from "./wordCount";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const model = "gemini-2.5-flash";
+const DEFAULT_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"] as const;
+
+function getGeminiApiKey(): string | undefined {
+  const key = process.env.GEMINI_API_KEY?.trim();
+  return key || undefined;
+}
+
+function getGeminiModels(): string[] {
+  const fromEnv = process.env.GEMINI_MODEL?.trim();
+  if (fromEnv) return [fromEnv, ...DEFAULT_MODELS.filter((m) => m !== fromEnv)];
+  return [...DEFAULT_MODELS];
+}
+
+export function getGeminiKeyFingerprint(): string | null {
+  const key = getGeminiApiKey();
+  if (!key) return null;
+  return key.slice(-4);
+}
 
 export interface GeneratedPost {
   title: string;
@@ -15,9 +31,71 @@ export interface GeneratedPost {
 
 export type GenerateBlogPostFailure =
   | { kind: "missing_api_key" }
+  | { kind: "project_suspended"; projectId?: string }
+  | { kind: "api_error"; status?: number; message: string }
   | { kind: "empty_model_text" }
   | { kind: "json_parse_failed"; preview: string }
   | { kind: "too_short"; words: number; minWords: number };
+
+function parseGeminiApiError(err: unknown): GenerateBlogPostFailure {
+  const raw = err instanceof Error ? err.message : String(err);
+  const sanitized = raw
+    .replace(/api_key:[A-Za-z0-9_-]+/gi, "api_key:[REDACTED]")
+    .replace(/AIza[A-Za-z0-9_-]+/g, "[REDACTED_KEY]");
+
+  const projectMatch = sanitized.match(/projects\/(\d+)/);
+  const projectId = projectMatch?.[1];
+
+  if (/CONSUMER_SUSPENDED|has been suspended/i.test(sanitized)) {
+    return {
+      kind: "project_suspended",
+      projectId,
+    };
+  }
+
+  let status: number | undefined;
+  const statusMatch = sanitized.match(/"code":\s*(\d{3})/);
+  if (statusMatch) status = Number(statusMatch[1]);
+
+  return {
+    kind: "api_error",
+    status,
+    message: sanitized.slice(0, 400) || "Gemini API request failed",
+  };
+}
+
+export async function testGeminiConnection(): Promise<
+  | { ok: true; model: string; keySuffix: string }
+  | { ok: false; failure: GenerateBlogPostFailure }
+> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) return { ok: false, failure: { kind: "missing_api_key" } };
+
+  const ai = new GoogleGenAI({ apiKey });
+  for (const model of getGeminiModels()) {
+    try {
+      await ai.models.generateContent({
+        model,
+        contents: "Reply with exactly: ok",
+        config: { maxOutputTokens: 16 },
+      });
+      return { ok: true, model, keySuffix: apiKey.slice(-4) };
+    } catch (err) {
+      const failure = parseGeminiApiError(err);
+      if (failure.kind === "project_suspended") {
+        return { ok: false, failure };
+      }
+    }
+  }
+
+  return {
+    ok: false,
+    failure: {
+      kind: "api_error",
+      message: "All configured Gemini models failed. Check GEMINI_API_KEY and billing.",
+    },
+  };
+}
 
 const COMPETITION_TOPICS = [
   { category: "सामान्य ज्ञान - भारतीय इतिहास", keywords: "Indian History GK, भारतीय इतिहास प्रश्न उत्तर, SSC History MCQ", hint: "Mughal Empire, Freedom Movement, Ancient India, Medieval India" },
@@ -257,22 +335,17 @@ function parseGeneratedJson(raw: string): GeneratedPost | null {
   };
 }
 
-export async function generateBlogPost(): Promise<
-  | { ok: true; post: GeneratedPost }
-  | { ok: false; failure: GenerateBlogPostFailure }
-> {
-  if (!GEMINI_API_KEY) return { ok: false, failure: { kind: "missing_api_key" } };
-
-  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-  const response = await ai.models.generateContent({
+async function generateWithModel(
+  ai: GoogleGenAI,
+  model: string
+): Promise<Awaited<ReturnType<typeof ai.models.generateContent>>> {
+  return ai.models.generateContent({
     model,
     contents: buildPrompt(),
-    // Increase output budget so the model can consistently reach 1500+ words.
     config: {
       maxOutputTokens: 8192,
       temperature: 0.7,
       topP: 0.95,
-      // Ask the SDK/model to return JSON (reduces ```json fences and extra prose).
       responseMimeType: "application/json",
       responseJsonSchema: {
         type: "object",
@@ -289,6 +362,38 @@ export async function generateBlogPost(): Promise<
       },
     },
   });
+}
+
+export async function generateBlogPost(): Promise<
+  | { ok: true; post: GeneratedPost }
+  | { ok: false; failure: GenerateBlogPostFailure }
+> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) return { ok: false, failure: { kind: "missing_api_key" } };
+
+  const ai = new GoogleGenAI({ apiKey });
+  let response: Awaited<ReturnType<typeof ai.models.generateContent>> | null = null;
+  let lastApiFailure: GenerateBlogPostFailure | null = null;
+
+  for (const model of getGeminiModels()) {
+    try {
+      response = await generateWithModel(ai, model);
+      break;
+    } catch (err) {
+      lastApiFailure = parseGeminiApiError(err);
+      console.error(`[gemini] model ${model} failed:`, lastApiFailure);
+      if (lastApiFailure.kind === "project_suspended") {
+        return { ok: false, failure: lastApiFailure };
+      }
+    }
+  }
+
+  if (!response) {
+    return {
+      ok: false,
+      failure: lastApiFailure ?? { kind: "api_error", message: "Gemini API request failed" },
+    };
+  }
 
   const text = extractModelText(response);
   if (!text) return { ok: false, failure: { kind: "empty_model_text" } };

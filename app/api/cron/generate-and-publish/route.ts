@@ -3,7 +3,15 @@ import { generateBlogPost } from "@/lib/gemini";
 import { supabaseServer } from "@/lib/supabase/server";
 
 const CRON_SECRET = process.env.CRON_SECRET;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+function projectSuspendedMessage(projectId?: string): string {
+  const id = projectId ? ` (project ${projectId})` : "";
+  return (
+    `Google Cloud project${id} is suspended by Google — a new API key in the same project will NOT work. ` +
+    `In AI Studio (https://aistudio.google.com/apikey) choose "Create API key in new project" (not existing project), ` +
+    `or use a different Google account. Then update GEMINI_API_KEY in Vercel and redeploy.`
+  );
+}
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -17,7 +25,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!GEMINI_API_KEY) {
+  if (!process.env.GEMINI_API_KEY?.trim()) {
     return NextResponse.json(
       { error: "GEMINI_API_KEY not set. Add it in Vercel Environment Variables." },
       { status: 500 }
@@ -41,11 +49,31 @@ export async function GET(req: Request) {
     }
 
     if (!post) {
-      // Non-2xx so Vercel Cron shows this run as a failure.
+      const failure = lastFailure as { kind?: string; projectId?: string } | null;
+
+      if (failure?.kind === "project_suspended") {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: projectSuspendedMessage(failure.projectId),
+            reason: "CONSUMER_SUSPENDED",
+            published: null,
+          },
+          { status: 403 }
+        );
+      }
+
+      if (failure?.kind === "api_error") {
+        const msg = (failure as { message?: string }).message ?? "Gemini API error";
+        return NextResponse.json(
+          { ok: false, error: msg, reason: failure, published: null },
+          { status: 502 }
+        );
+      }
+
       return NextResponse.json(
         {
           ok: false,
-          // Keep both fields for compatibility with older clients/logs.
           message: "Gemini could not generate a valid post (JSON parse failed or word count too low).",
           error: "Gemini could not generate a valid post (JSON parse failed or word count too low).",
           reason: lastFailure ?? null,
@@ -95,9 +123,14 @@ export async function GET(req: Request) {
     });
   } catch (err) {
     console.error("[generate-and-publish] error:", err);
-    return NextResponse.json(
-      { error: "Internal error", details: String(err) },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : String(err);
+    if (/CONSUMER_SUSPENDED|has been suspended/i.test(message)) {
+      const projectMatch = message.match(/projects\/(\d+)/);
+      return NextResponse.json(
+        { error: projectSuspendedMessage(projectMatch?.[1]) },
+        { status: 403 }
+      );
+    }
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
