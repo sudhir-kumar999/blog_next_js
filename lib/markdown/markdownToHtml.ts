@@ -1,4 +1,5 @@
 import { marked } from "marked";
+import { stripFaqComment } from "@/lib/aeo";
 
 const renderer = new marked.Renderer();
 
@@ -99,5 +100,5 @@ marked.setOptions({
 
 /* ---------------- EXPORT ---------------- */
 export function markdownToHtml(markdown: string): string {
-  return marked.parse(markdown || "") as string;
+  return marked.parse(stripFaqComment(markdown || "")) as string;
 }

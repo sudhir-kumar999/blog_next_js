@@ -9,13 +9,13 @@ import { ADSENSE_SLOTS } from "@/lib/adsense-config";
 export const revalidate = 60; // ISR for SEO + fresh content
 
 export const metadata: Metadata = {
-  title: "StudyMitra — सरकारी योजना, परीक्षा तैयारी, शिक्षा गाइड",
-  description: "सरकारी नौकरी, BPSC, RRB, CBSE, राशन कार्ड, जाति प्रमाण पत्र — सब कुछ हिंदी में पढ़ें StudyMitra पर।",
+  title: "StudyMitra — नोट्स, प्रश्न, मॉक टेस्ट, वैकेंसी",
+  description: "SSC, Railway, UPSC, NEET, Board — study notes, practice questions, mock tests और vacancy details हिंदी में।",
   alternates: { canonical: SITE_BASE_URL },
   openGraph: {
     url: SITE_BASE_URL,
-    title: "StudyMitra — सरकारी योजना, परीक्षा तैयारी, शिक्षा गाइड",
-    description: "सरकारी नौकरी, BPSC, RRB, CBSE, राशन कार्ड, जाति प्रमाण पत्र — सब कुछ हिंदी में पढ़ें StudyMitra पर।",
+    title: "StudyMitra — नोट्स, प्रश्न, मॉक टेस्ट, वैकेंसी",
+    description: "SSC, Railway, UPSC, NEET, Board — study notes, practice questions, mock tests और vacancy details हिंदी में।",
   },
   robots: { index: true, follow: true },
 };
@@ -49,8 +49,25 @@ export default async function Home() {
             <div className="mt-3 h-1 w-full bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
           </div>
           <p className="mt-6 text-lg text-zinc-600 sm:text-xl">
-            सरकारी योजना, परीक्षा तैयारी, और शिक्षा से जुड़ी जानकारी—simple Hindi me.
+            Study notes, practice questions, mock tests aur sarkari exam vacancy — sirf padhai, simple Hindi me.
           </p>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-2 text-sm">
+            {[
+              { label: "Notes", slug: "study-notes" },
+              { label: "Questions", slug: "practice-questions" },
+              { label: "Mock Tests", slug: "mock-tests" },
+              { label: "Vacancy", slug: "vacancy-details" },
+            ].map((item) => (
+              <Link
+                key={item.slug}
+                href={`/category/${item.slug}`}
+                className="rounded-full border border-zinc-200 bg-white px-4 py-2 font-medium text-zinc-700 transition hover:border-blue-300 hover:text-blue-600"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
@@ -79,7 +96,7 @@ export default async function Home() {
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-black">Latest posts</h2>
-            <p className="mt-1 text-sm text-zinc-600">Fresh updates—everyday learning.</p>
+            <p className="mt-1 text-sm text-zinc-600">Notes, MCQs, mocks &amp; vacancy updates.</p>
           </div>
           <Link className="text-sm font-semibold text-blue-600 hover:underline" href="/blog">
             View all →
@@ -146,6 +163,28 @@ export default async function Home() {
               <p className="mt-2 text-sm text-zinc-400">Check back soon for new content!</p>
             </div>
           )}
+        </section>
+
+        <section className="mt-16 rounded-2xl border border-zinc-200 bg-zinc-50 p-8 text-center sm:p-10">
+          <h2 className="text-xl font-bold text-zinc-900">Trust &amp; policies</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-zinc-600">
+            Clear navigation, contact details, and editorial standards for students and exam
+            aspirants.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm">
+            <Link href="/about" className="font-medium text-blue-600 hover:underline">
+              About
+            </Link>
+            <Link href="/editorial-policy" className="font-medium text-blue-600 hover:underline">
+              Editorial policy
+            </Link>
+            <Link href="/privacy-policy" className="font-medium text-blue-600 hover:underline">
+              Privacy
+            </Link>
+            <Link href="/contact" className="font-medium text-blue-600 hover:underline">
+              Contact
+            </Link>
+          </div>
         </section>
       </main>
     </div>

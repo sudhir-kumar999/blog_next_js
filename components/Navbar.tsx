@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { useEffect, useState } from "react";
+import { STUDY_NAV_CATEGORIES } from "@/lib/study-nav";
+import { useEffect, useMemo, useState } from "react";
 
 interface Category {
   id: string;
@@ -20,12 +21,17 @@ export default function Navbar() {
   // 🔹 Fetch categories
   useEffect(() => {
     if (!supabaseBrowser) return;
-    supabaseBrowser
-      .from("categories")
-      .select("id, name, slug")
-      .order("name")
-      .then(({ data }) => setCategories(data || []))
-      .catch(() => setCategories([]));
+    void (async () => {
+      try {
+        const { data } = await supabaseBrowser
+          .from("categories")
+          .select("id, name, slug")
+          .order("name");
+        setCategories(data || []);
+      } catch {
+        setCategories([]);
+      }
+    })();
   }, []);
 
   // Close category dropdown when clicking outside
@@ -48,6 +54,16 @@ export default function Navbar() {
       document.body.style.overflow = "unset";
     };
   }, [openMobile]);
+
+  const navCategories = useMemo(() => {
+    const bySlug = new Map<string, Category>(
+      STUDY_NAV_CATEGORIES.map((c) => [c.slug, { id: c.slug, name: c.name, slug: c.slug }])
+    );
+    for (const cat of categories) {
+      if (!bySlug.has(cat.slug)) bySlug.set(cat.slug, cat);
+    }
+    return Array.from(bySlug.values());
+  }, [categories]);
 
   return (
     <>
@@ -80,7 +96,7 @@ export default function Navbar() {
                   }}
                   className="flex items-center gap-1 text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
                 >
-                  Categories
+                  Study material
                   <svg 
                     className={`h-4 w-4 transition-transform ${openCat ? 'rotate-180' : ''}`} 
                     fill="none" 
@@ -93,20 +109,16 @@ export default function Navbar() {
 
                 {openCat && (
                   <div className="absolute left-0 z-[60] mt-3 w-56 animate-fadeIn rounded-xl border border-zinc-200 bg-white p-2 shadow-lg">
-                    {categories.length > 0 ? (
-                      categories.map((cat) => (
-                        <Link
-                          key={cat.id}
-                          href={`/category/${cat.slug}`}
-                          onClick={() => setOpenCat(false)}
-                          className="block rounded-lg px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black"
-                        >
-                          {cat.name}
-                        </Link>
-                      ))
-                    ) : (
-                      <p className="px-4 py-2 text-sm text-zinc-400">No categories yet</p>
-                    )}
+                    {navCategories.map((cat) => (
+                      <Link
+                        key={cat.slug}
+                        href={`/category/${cat.slug}`}
+                        onClick={() => setOpenCat(false)}
+                        className="block rounded-lg px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black"
+                      >
+                        {cat.name}
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>
@@ -221,7 +233,7 @@ export default function Navbar() {
                   {/* Categories */}
                   <details className="group">
                     <summary className="flex cursor-pointer items-center justify-between rounded-lg px-4 py-3 font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-black">
-                      Categories
+                      Study material
                       <svg 
                         className="h-4 w-4 transition-transform group-open:rotate-180" 
                         fill="none" 
@@ -232,20 +244,16 @@ export default function Navbar() {
                       </svg>
                     </summary>
                     <div className="ml-4 mt-1 space-y-1 border-l-2 border-zinc-100 pl-4">
-                      {categories.length > 0 ? (
-                        categories.map((cat) => (
-                          <Link
-                            key={cat.id}
-                            href={`/category/${cat.slug}`}
-                            onClick={() => setOpenMobile(false)}
-                            className="block rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-black"
-                          >
-                            {cat.name}
-                          </Link>
-                        ))
-                      ) : (
-                        <p className="px-3 py-2 text-sm text-zinc-400">No categories</p>
-                      )}
+                      {navCategories.map((cat) => (
+                        <Link
+                          key={cat.slug}
+                          href={`/category/${cat.slug}`}
+                          onClick={() => setOpenMobile(false)}
+                          className="block rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-black"
+                        >
+                          {cat.name}
+                        </Link>
+                      ))}
                     </div>
                   </details>
 

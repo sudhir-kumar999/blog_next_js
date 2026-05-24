@@ -1,6 +1,7 @@
 import { supabaseServer } from "@/lib/supabase/server";
 import { MetadataRoute } from "next";
 import { SITE_BASE_URL } from "@/lib/site-config";
+import { STUDY_NAV_CATEGORIES } from "@/lib/study-nav";
 
 // Har request pe fresh sitemap – nayi post add hote hi /sitemap.xml me dikhegi
 export const dynamic = "force-dynamic";
@@ -14,6 +15,13 @@ const staticPages: MetadataRoute.Sitemap = [
   { url: `${SITE_BASE_URL}/disclaimer`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
   { url: `${SITE_BASE_URL}/terms`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
   { url: `${SITE_BASE_URL}/privacy-policy`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
+  { url: `${SITE_BASE_URL}/editorial-policy`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
+  ...STUDY_NAV_CATEGORIES.map((cat) => ({
+    url: `${SITE_BASE_URL}/category/${cat.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.75,
+  })),
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

@@ -6,10 +6,11 @@ import "./globals.css";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 
+import AdSenseScript from "@/components/AdSenseScript";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
-import { SITE_BASE_URL } from "@/lib/site-config";
+import { SITE_BASE_URL, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site-config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,8 +28,12 @@ export const metadata: Metadata = {
     default: "StudyMitra",
     template: "%s | StudyMitra",
   },
-  description: "सरकारी योजनाएं, परीक्षा की तैयारी, और शिक्षा से जुड़ी जानकारी हिंदी में — StudyMitra पर पढ़ें।",
+  description: SITE_DESCRIPTION,
   robots: { index: true, follow: true },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icon.svg" }],
+  },
   other: {
     "google-adsense-account": "ca-pub-8512064525174724",
   },
@@ -47,12 +52,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased bg-white text-zinc-900`}
       >
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8512064525174724"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
+        <AdSenseScript />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-W2MN41PJ83"
           strategy="afterInteractive"

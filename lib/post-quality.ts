@@ -1,9 +1,10 @@
 import type { GeneratedPost } from "./gemini";
+import { embedFaqComment, hasDirectAnswerBlock } from "./aeo";
 import { countWords, MIN_POST_WORDS } from "./wordCount";
 
-/** Patterns that risk Google policy violations or site penalties — block publish */
 const BLOCKED_CONTENT_PATTERNS: RegExp[] = [
   /\b(100%|guaranteed)\s+(selection|pass|job|result)/i,
+  /\b(90\s*%\+|100\s*%)\s*(score|marks|selection)/i,
   /\b(free\s+)?download\s+(movie|film|web\s*series|pirated)/i,
   /click\s+here\s+to\s+win/i,
   /share\s+\d+\s+times\s+to\s+unlock/i,
@@ -12,8 +13,7 @@ const BLOCKED_CONTENT_PATTERNS: RegExp[] = [
   /api[_-]?key\s*[:=]\s*["']?[A-Za-z0-9_-]+/i,
 ];
 
-/** Soft warnings — log but allow if only minor */
-const SENSITIVE_NEWS_PATTERNS: RegExp[] = [
+const SENSITIVE_CONTENT_PATTERNS: RegExp[] = [
   /hatya|हत्या|rape|बलात्कार|lynch|lynching|terror\s+attack|आत्महत्या|suicide/i,
 ];
 
@@ -21,6 +21,7 @@ export type PostQualityFailure =
   | { kind: "blocked_content"; reason: string }
   | { kind: "too_short"; words: number }
   | { kind: "invalid_title" }
+  | { kind: "missing_aeo"; reason: string }
   | { kind: "sensitive_news" };
 
 export function sanitizeSlug(slug: string): string {
@@ -36,23 +37,28 @@ export function sanitizeSlug(slug: string): string {
   );
 }
 
+/** AI output normalization: SEO fields + embedded FAQ for schema (no manual editing). */
 export function enrichPostForSeo(post: GeneratedPost): GeneratedPost {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://www.studymitra.in";
-  const slug = sanitizeSlug(post.slug);
-  const hasSiteLink = post.content.includes(siteUrl) || post.content.includes("studymitra.in");
+  const faq = post.faq?.filter((f) => f.question?.trim() && f.answer?.trim()) ?? [];
+  let content = post.content.trim();
 
-  const seoFooter = hasSiteLink
-    ? ""
-    : `\n\n---\n📚 **और भी उपयोगी गाइड:** [Study Mitra](${siteUrl}/blog) पर रोज़ाना नई पोस्ट — पढ़ाई, करंट अफेयर्स और ट्रेंडिंग टॉपिक।\n`;
+  if (!hasDirectAnswerBlock(content) && post.excerpt) {
+    content = `## सीधा जवाब\n${post.excerpt.trim()}\n\n${content}`;
+  }
+
+  if (faq.length > 0) {
+    content = embedFaqComment(content, faq);
+  }
 
   return {
     ...post,
-    slug,
+    slug: sanitizeSlug(post.slug),
     title: post.title.trim().slice(0, 120),
     excerpt: post.excerpt.trim().slice(0, 160),
     seo_title: (post.seo_title || post.title).trim().slice(0, 70),
     seo_description: (post.seo_description || post.excerpt).trim().slice(0, 160),
-    content: post.content.trim() + seoFooter,
+    content,
+    faq: faq.length > 0 ? faq : undefined,
   };
 }
 
@@ -71,14 +77,23 @@ export function validatePostQuality(post: GeneratedPost): PostQualityFailure | n
     }
   }
 
-  for (const pattern of SENSITIVE_NEWS_PATTERNS) {
+  for (const pattern of SENSITIVE_CONTENT_PATTERNS) {
     if (pattern.test(combined)) {
       return { kind: "sensitive_news" };
     }
   }
 
+  if (!hasDirectAnswerBlock(post.content)) {
+    return { kind: "missing_aeo", reason: "Missing ## सीधा जवाब section" };
+  }
+
+  const faqCount = post.faq?.length ?? (post.content.match(/\*\*प्रश्न:\*\*/g)?.length ?? 0);
+  if (faqCount < 4) {
+    return { kind: "missing_aeo", reason: "Need at least 4 FAQ items for AEO" };
+  }
+
   const words = countWords(post.content);
-  if (words < MIN_POST_WORDS - 100) {
+  if (words < MIN_POST_WORDS) {
     return { kind: "too_short", words };
   }
 

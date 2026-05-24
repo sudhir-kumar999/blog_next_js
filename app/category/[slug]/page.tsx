@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import BlogCard from "@/components/BlogCard";
 import { SITE_BASE_URL } from "@/lib/site-config";
+import { STUDY_NAV_CATEGORIES } from "@/lib/study-nav";
 
 export const revalidate = 60; // ISR – SEO friendly
 export const dynamicParams = true;
@@ -18,14 +19,19 @@ export async function generateStaticParams() {
     .from("categories")
     .select("slug");
 
-  if (error || !data) return [];
+  const fromDb =
+    error || !data
+      ? []
+      : data
+          .filter((cat) => cat.slug && typeof cat.slug === "string")
+          .map((cat) => ({ slug: cat.slug.trim().replace(/\s+/g, "-") }))
+          .filter((c) => c.slug.length > 0);
 
-  return data
-    .filter((cat) => cat.slug && typeof cat.slug === "string")
-    .map((cat) => ({
-      slug: cat.slug.trim().replace(/\s+/g, "-"),
-    }))
-    .filter((c) => c.slug.length > 0);
+  const slugs = new Set(fromDb.map((c) => c.slug));
+  for (const cat of STUDY_NAV_CATEGORIES) {
+    if (!slugs.has(cat.slug)) fromDb.push({ slug: cat.slug });
+  }
+  return fromDb;
 }
 
 /* ======================================================
@@ -38,28 +44,33 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
 
+  const staticCat = STUDY_NAV_CATEGORIES.find((c) => c.slug === slug);
+
   const { data: category } = await supabaseServer
     .from("categories")
     .select("name")
     .eq("slug", slug)
     .single();
 
-  if (!category) {
+  const name = category?.name ?? staticCat?.name;
+
+  if (!name) {
     return {
       title: "Category not found",
       description: "This category does not exist",
+      robots: { index: false, follow: false },
     };
   }
 
   const url = `${SITE_BASE_URL}/category/${slug}`;
   return {
-    title: `${category.name} Articles`,
-    description: `Read all posts related to ${category.name}`,
+    title: `${name} — Study Material`,
+    description: `Hindi ${name.toLowerCase()} for competitive and board exams on StudyMitra.`,
     robots: { index: true, follow: true },
     alternates: { canonical: url },
     openGraph: {
-      title: `${category.name} Articles`,
-      description: `Read all posts related to ${category.name}`,
+      title: `${name} — Study Material`,
+      description: `Hindi ${name.toLowerCase()} for competitive and board exams.`,
       type: "website",
       url,
     },
@@ -76,19 +87,21 @@ export default async function CategoryPage({
 }) {
   const { slug } = await params;
 
-  // 🔹 Get category
+  const staticCat = STUDY_NAV_CATEGORIES.find((c) => c.slug === slug);
+
   const { data: category } = await supabaseServer
     .from("categories")
     .select("id, name, slug")
     .eq("slug", slug)
     .single();
 
-  if (!category) {
+  const displayCategory = category ?? (staticCat ? { id: "", name: staticCat.name, slug: staticCat.slug } : null);
+
+  if (!displayCategory) {
     notFound();
   }
 
-  // 🔹 Get posts under this category
-  const { data: posts } = await supabaseServer
+  let postsQuery = supabaseServer
     .from("posts")
     .select(`
       id,
@@ -101,19 +114,24 @@ export default async function CategoryPage({
         slug
       )
     `)
-    .eq("category_id", category.id)
     .eq("published", true)
     .order("published_at", { ascending: false });
+
+  if (category?.id) {
+    postsQuery = postsQuery.eq("category_id", category.id);
+  }
+
+  const { data: posts } = await postsQuery;
 
   return (
     <div className="min-h-screen bg-white">
       <section className="border-b border-zinc-100 bg-gradient-to-b from-zinc-50 to-white py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h1 className="text-4xl font-bold tracking-tight text-black sm:text-5xl">
-            {category.name}
+            {displayCategory.name}
           </h1>
           <p className="mt-4 text-zinc-600 sm:text-lg">
-            Latest articles in {category.name}
+            Latest study material in {displayCategory.name}
           </p>
           <div className="mt-8">
             <Link

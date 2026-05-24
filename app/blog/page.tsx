@@ -11,13 +11,15 @@ export const revalidate = 60; // ISR: revalidate every 60s; no client-side data 
 
 const blogUrl = `${SITE_BASE_URL}/blog`;
 export const metadata: Metadata = {
-  title: "Blog - Latest Articles & Tutorials",
-  description: "Explore our latest blog posts, tutorials, and guides on web development, design, and technology.",
+  title: "Study Material Blog — Notes, MCQs, Mock Tests",
+  description:
+    "Latest Hindi study posts: exam notes, practice questions, mock tests, and government vacancy guides for Indian students.",
   alternates: { canonical: blogUrl },
   openGraph: {
     url: blogUrl,
-    title: "Blog - Latest Articles & Tutorials",
-    description: "Explore our latest blog posts, tutorials, and guides on web development, design, and technology.",
+    title: "Study Material Blog — Notes, MCQs, Mock Tests",
+    description:
+      "Latest Hindi study posts: exam notes, practice questions, mock tests, and vacancy guides.",
   },
   robots: { index: true, follow: true },
 };
@@ -72,7 +74,7 @@ export default async function BlogPage() {
             <div className="mt-2 h-1 w-full bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
           </div>
           <p className="mt-6 text-lg text-zinc-600 sm:text-xl">
-            Articles, tutorials and guides on web development
+            Exam notes, practice questions, mock tests, and vacancy guides — Hindi me
           </p>
         </div>
       </section>

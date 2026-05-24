@@ -10,3 +10,12 @@ export const ADSENSE_SLOTS = {
 export function hasAdSlot(slot: string | undefined): slot is string {
   return Boolean(slot && /^\d+$/.test(slot));
 }
+
+/** Load AdSense script only when at least one unit is configured (avoids empty ad areas). */
+export function hasAnyAdSlot(): boolean {
+  return (
+    hasAdSlot(ADSENSE_SLOTS.display) ||
+    hasAdSlot(ADSENSE_SLOTS.inArticle) ||
+    hasAdSlot(ADSENSE_SLOTS.footer)
+  );
+}

@@ -7,6 +7,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { markdownToHtml } from "@/lib/markdown/markdownToHtml";
 import BlogContent from "@/components/BlogContent";
 import AdSenseSlot from "@/components/AdSenseSlot";
+import { buildFaqPageJsonLd, extractFaqFromContent } from "@/lib/aeo";
 import { ADSENSE_SLOTS } from "@/lib/adsense-config";
 import { SITE_BASE_URL } from "@/lib/site-config";
 import { countWords } from "@/lib/wordCount";
@@ -72,6 +73,7 @@ export async function generateMetadata({
     return {
       title: "Post not found",
       description: "This post does not exist",
+      robots: { index: false, follow: false },
     };
   }
 
@@ -151,10 +153,12 @@ export default async function BlogPostPage({
     .order("published_at", { ascending: false })
     .limit(4);
 
+  const faqs = extractFaqFromContent(post.content || "");
   const htmlContent = markdownToHtml(post.content);
   const category = Array.isArray(post.categories) ? post.categories[0] : post.categories;
 
   const postUrl = `${baseUrl}/blog/${slug}`;
+  const faqJsonLd = buildFaqPageJsonLd(faqs, postUrl);
   const wordCount = countWords(post.content || "");
   const readingMinutes = Math.max(1, Math.round(wordCount / 220));
   const jsonLd = {
@@ -178,7 +182,7 @@ export default async function BlogPostPage({
       url: baseUrl,
       logo: {
         "@type": "ImageObject",
-        url: `${baseUrl}/favicon.ico`,
+        url: `${baseUrl}/icon.svg`,
       },
     },
     mainEntityOfPage: {
@@ -193,6 +197,12 @@ export default async function BlogPostPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      ) : null}
 
       <div className="min-h-screen bg-white">
         {/* Breadcrumb Navigation */}
@@ -316,17 +326,18 @@ export default async function BlogPostPage({
               )}
             </header>
 
-            {ADSENSE_SLOTS.display ? (
-              <AdSenseSlot slot={ADSENSE_SLOTS.display} format="horizontal" className="my-6" />
-            ) : null}
-
             <div itemProp="articleBody">
               <BlogContent html={htmlContent} />
             </div>
 
-            {ADSENSE_SLOTS.inArticle ? (
+            {wordCount >= 800 && ADSENSE_SLOTS.display ? (
+              <AdSenseSlot slot={ADSENSE_SLOTS.display} format="horizontal" className="my-10" />
+            ) : null}
+
+            {wordCount >= 1200 && ADSENSE_SLOTS.inArticle ? (
               <AdSenseSlot slot={ADSENSE_SLOTS.inArticle} format="auto" className="my-10" />
             ) : null}
+
           </article>
 
           {/* More articles – internal links help Google index "Crawled - not indexed" pages */}

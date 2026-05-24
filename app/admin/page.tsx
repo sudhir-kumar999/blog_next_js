@@ -7,6 +7,7 @@ import { requireSupabaseBrowser } from "@/lib/supabase/browser";
 interface Post {
   id: string;
   title: string;
+  slug: string;
   published: boolean;
   published_at: string | null;
   categories?: { name: string }[];
@@ -21,6 +22,7 @@ export default function AdminPage() {
       .select(`
         id,
         title,
+        slug,
         published,
         published_at,
         categories (
@@ -34,71 +36,58 @@ export default function AdminPage() {
   }, []);
 
   async function deletePost(id: string) {
-    const ok = confirm("Are you sure you want to delete this post?");
+    const ok = confirm("Delete this post permanently?");
     if (!ok) return;
 
-    const res = await fetch(`/api/posts/${id}`, {
-      method: "DELETE",
-    });
-
+    const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
     if (!res.ok) {
       alert("Failed to delete post");
       return;
     }
-
-    // ✅ Remove from UI without reload
     setPosts((prev) => prev.filter((p) => p.id !== id));
   }
 
   return (
-    <>
-      <header className="mb-10 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Admin – Posts</h1>
-
-        <div className="flex gap-3">
-          <Link
-            href="/admin/scheduled"
-            className="rounded border border-zinc-300 px-4 py-2 text-zinc-700 hover:bg-zinc-50"
-          >
-            Daily queue
-          </Link>
-          <Link
-            href="/admin/new"
-            className="rounded bg-black px-4 py-2 text-white"
-          >
-            + New Post
-          </Link>
-        </div>
+  <>
+      <header className="mb-8 rounded-2xl border border-blue-100 bg-blue-50/80 p-6">
+        <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">Admin dashboard</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-600 sm:text-base">
+          Posts are written, SEO/AEO optimized, and published automatically by AI (Gemini cron).
+          You do not need to edit posts manually.
+        </p>
+        <p className="mt-3 text-xs text-zinc-500">
+          Cron: 2 study posts per day · categories auto-assigned · min ~1500 words each
+        </p>
       </header>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {posts.map((post) => (
           <div
             key={post.id}
-            className="flex items-center justify-between rounded border p-4"
+            className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
           >
-            <div>
-              <p className="font-medium">{post.title}</p>
-
-              <p className="text-sm text-zinc-500">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-zinc-900">{post.title}</p>
+              <p className="mt-1 text-sm text-zinc-500">
                 {post.published ? "Published" : "Draft"}
-                {post.categories?.[0]?.name && (
-                  <> • Category: {post.categories[0].name}</>
-                )}
+                {post.categories?.[0]?.name && <> · {post.categories[0].name}</>}
+                {post.published_at &&
+                  ` · ${new Date(post.published_at).toLocaleDateString("en-IN")}`}
               </p>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex shrink-0 flex-wrap gap-2">
               <Link
-                href={`/admin/edit/${post.id}`}
-                className="text-blue-600"
+                href={`/blog/${post.slug}`}
+                target="_blank"
+                className="inline-flex min-h-[40px] items-center rounded-lg border border-zinc-200 px-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
               >
-                Edit
+                View
               </Link>
-
               <button
+                type="button"
                 onClick={() => deletePost(post.id)}
-                className="text-red-600"
+                className="inline-flex min-h-[40px] items-center rounded-lg border border-red-200 px-3 text-sm font-medium text-red-600 hover:bg-red-50"
               >
                 Delete
               </button>
@@ -107,7 +96,9 @@ export default function AdminPage() {
         ))}
 
         {posts.length === 0 && (
-          <p className="text-zinc-500">No posts yet.</p>
+          <p className="rounded-xl border border-dashed border-zinc-200 p-8 text-center text-zinc-500">
+            No posts yet. The next cron run will publish automatically when GEMINI_API_KEY is set.
+          </p>
         )}
       </div>
     </>
