@@ -1,5 +1,6 @@
 import { marked } from "marked";
 import { stripFaqComment } from "@/lib/aeo";
+import { sanitizeBlogHtml } from "@/lib/markdown/sanitizeHtml";
 
 const renderer = new marked.Renderer();
 
@@ -78,7 +79,10 @@ ${text}
 
 /* ---------------- IMAGE ---------------- */
 renderer.image = ({ href, text }) => {
-  return `<img src="${href}" alt="${text || ""}" loading="lazy" class="rounded-lg my-6" />`;
+  const src = href?.trim() ?? "";
+  if (!/^https?:\/\//i.test(src)) return "";
+  const safeAlt = String(text ?? "").replace(/"/g, "&quot;");
+  return `<img src="${src}" alt="${safeAlt}" loading="lazy" class="rounded-lg my-6" />`;
 };
 
 /* ---------------- LINK ---------------- */
@@ -100,5 +104,6 @@ marked.setOptions({
 
 /* ---------------- EXPORT ---------------- */
 export function markdownToHtml(markdown: string): string {
-  return marked.parse(stripFaqComment(markdown || "")) as string;
+  const raw = marked.parse(stripFaqComment(markdown || "")) as string;
+  return sanitizeBlogHtml(raw);
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { verifyCronRequest } from "@/lib/cron-auth";
 import { getGeminiKeyFingerprint, testGeminiConnection } from "@/lib/gemini";
-
-const CRON_SECRET = process.env.CRON_SECRET;
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +14,15 @@ function projectSuspendedMessage(projectId?: string): string {
 }
 
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const secret = authHeader?.replace("Bearer ", "").trim();
+  const cronAuth = verifyCronRequest(req);
+  if (!cronAuth.ok) {
+    return NextResponse.json({ error: cronAuth.message }, { status: cronAuth.status });
+  }
 
-  if (!CRON_SECRET || secret !== CRON_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ip = getClientIp(req);
+  const limit = checkRateLimit(`cron-health:${ip}`, 20, 60_000);
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const keySuffix = getGeminiKeyFingerprint();

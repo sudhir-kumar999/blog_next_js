@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
+import { verifyCronRequest } from "@/lib/cron-auth";
 import { canRunCronPublish } from "@/lib/cron-guard";
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 import { getCategoryIdForMaterialType } from "@/lib/category-for-material";
 import { generateBlogPost, parsePostSlot, type PostSlot } from "@/lib/gemini";
 import { slotLabel } from "@/lib/study-material";
 import { supabaseServer } from "@/lib/supabase/server";
-
-const CRON_SECRET = process.env.CRON_SECRET;
 
 function projectSuspendedMessage(projectId?: string): string {
   const id = projectId ? ` (project ${projectId})` : "";
@@ -22,12 +22,16 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const secret = authHeader?.replace("Bearer ", "").trim();
+  const cronAuth = verifyCronRequest(req);
+  if (!cronAuth.ok) {
+    console.error("[generate-and-publish] unauthorized:", cronAuth.message);
+    return NextResponse.json({ error: cronAuth.message }, { status: cronAuth.status });
+  }
 
-  if (!CRON_SECRET || secret !== CRON_SECRET) {
-    console.error("[generate-and-publish] unauthorized: missing/invalid Authorization header");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ip = getClientIp(req);
+  const limit = checkRateLimit(`cron-gen:${ip}`, 10, 60_000);
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   if (!process.env.GEMINI_API_KEY?.trim()) {

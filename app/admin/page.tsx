@@ -39,7 +39,10 @@ export default function AdminPage() {
     const ok = confirm("Delete this post permanently?");
     if (!ok) return;
 
-    const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/posts/${id}`, {
+      method: "DELETE",
+      credentials: "same-origin",
+    });
     if (!res.ok) {
       alert("Failed to delete post");
       return;

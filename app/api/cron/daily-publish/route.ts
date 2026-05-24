@@ -1,18 +1,22 @@
 import { supabaseServer } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { verifyCronRequest } from "@/lib/cron-auth";
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 import { countWords, MIN_POST_WORDS } from "@/lib/wordCount";
-
-const CRON_SECRET = process.env.CRON_SECRET;
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const secret = authHeader?.replace("Bearer ", "").trim();
+  const cronAuth = verifyCronRequest(req);
+  if (!cronAuth.ok) {
+    return NextResponse.json({ error: cronAuth.message }, { status: cronAuth.status });
+  }
 
-  if (!CRON_SECRET || secret !== CRON_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ip = getClientIp(req);
+  const limit = checkRateLimit(`cron-daily:${ip}`, 10, 60_000);
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   try {

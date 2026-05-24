@@ -32,7 +32,7 @@ export default function ScheduledPostsPage() {
   });
 
   useEffect(() => {
-    fetch("/api/scheduled-posts")
+    fetch("/api/scheduled-posts", { credentials: "same-origin" })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setPosts(data);
@@ -54,6 +54,7 @@ export default function ScheduledPostsPage() {
     setAdding(true);
     fetch("/api/scheduled-posts", {
       method: "POST",
+      credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: form.title.trim(),
