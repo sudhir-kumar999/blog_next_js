@@ -4,13 +4,13 @@ import {
   type PostSlot,
   type StudyMaterialType,
 } from "./study-material";
+import { enrichPostForSeo, validatePostQuality, type PostQualityFailure } from "./post-quality";
+import { countWords, MIN_POST_WORDS } from "./wordCount";
+import { buildPrompt } from "./gemini-prompts";
 
 export type { PostSlot } from "./study-material";
 export { parsePostSlot } from "./study-material";
-import { enrichPostForSeo, validatePostQuality, type PostQualityFailure } from "./post-quality";
-import { countWords, MIN_POST_WORDS } from "./wordCount";
 
-// One model = fewer API calls (helps avoid quota suspension). Set GEMINI_FALLBACK_MODEL for backup.
 const DEFAULT_MODELS = ["gemini-2.5-flash"] as const;
 const MAX_OUTPUT_TOKENS = 16384;
 const MAX_GENERATION_ATTEMPTS = 2;
@@ -79,15 +79,10 @@ function parseGeminiApiError(err: unknown): GenerateBlogPostFailure {
   const projectId = projectMatch?.[1];
 
   if (/CONSUMER_SUSPENDED|has been suspended/i.test(sanitized)) {
-    return {
-      kind: "project_suspended",
-      projectId,
-    };
+    return { kind: "project_suspended", projectId };
   }
 
-  if (
-    /RESOURCE_EXHAUSTED|quota exceeded|rate limit|429|too many requests/i.test(sanitized)
-  ) {
+  if (/RESOURCE_EXHAUSTED|quota exceeded|rate limit|429|too many requests/i.test(sanitized)) {
     return { kind: "quota_exceeded" };
   }
 
@@ -98,9 +93,7 @@ function parseGeminiApiError(err: unknown): GenerateBlogPostFailure {
   const messageMatch = sanitized.match(/"message":\s*"([^"]+)"/);
   const apiMessage = messageMatch?.[1];
 
-  if (status === 429) {
-    return { kind: "quota_exceeded" };
-  }
+  if (status === 429) return { kind: "quota_exceeded" };
 
   if (status === 404 || /is not found for API version/i.test(sanitized)) {
     return {
@@ -139,13 +132,8 @@ export async function testGeminiConnection(): Promise<
       return { ok: true, model, keySuffix: apiKey.slice(-4) };
     } catch (err) {
       const failure = parseGeminiApiError(err);
-      if (failure.kind === "project_suspended") {
-        return { ok: false, failure };
-      }
-      // Try next model on 404 (model name not available for this API key).
-      if (!isModelNotFoundFailure(failure)) {
-        return { ok: false, failure };
-      }
+      if (failure.kind === "project_suspended") return { ok: false, failure };
+      if (!isModelNotFoundFailure(failure)) return { ok: false, failure };
     }
   }
 
@@ -153,15 +141,10 @@ export async function testGeminiConnection(): Promise<
     ok: false,
     failure: {
       kind: "api_error",
-      message:
-        "No Gemini model worked. Set GEMINI_MODEL=gemini-2.5-flash in Vercel and redeploy.",
+      message: "No Gemini model worked. Set GEMINI_MODEL=gemini-2.5-flash in Vercel and redeploy.",
     },
   };
 }
-
-import { enrichPostForSeo, validatePostQuality, type PostQualityFailure } from "./post-quality";
-import { countWords } from "./wordCount";
-import { buildContentStructure, buildPrompt } from "./gemini-prompts";
 
 function extractFinishReason(response: unknown): string | undefined {
   try {
@@ -189,8 +172,6 @@ function isTruncatedResponse(response: unknown, text: string): boolean {
 }
 
 function extractModelText(response: unknown): string {
-  // The @google/genai SDK response shape differs across versions/paths.
-  // We defensively extract the first plausible text we can find.
   try {
     const isRecord = (v: unknown): v is Record<string, unknown> =>
       !!v && typeof v === "object" && !Array.isArray(v);
@@ -240,14 +221,14 @@ function extractModelText(response: unknown): string {
       const first = candidates?.[0];
       const content = getRecord(first, "content");
       const parts = getArray(content, "parts");
-      const joined =
+      return (
         parts
           ?.map((p) => {
             const t = getString(p, "text");
             return typeof t === "string" ? t : "";
           })
-          .join("") ?? "";
-      return joined;
+          .join("") ?? ""
+      );
     };
 
     const candidateText = extractFromCandidates(response);
@@ -262,22 +243,24 @@ function extractModelText(response: unknown): string {
 }
 
 function tryParseJsonObject(text: string): Record<string, unknown> | null {
-  // 1) Direct parse
   try {
     const parsed = JSON.parse(text);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
   } catch {
     // ignore
   }
 
-  // 2) If the model added extra prose, try the first {...} block.
   const firstBrace = text.indexOf("{");
   const lastBrace = text.lastIndexOf("}");
   if (firstBrace >= 0 && lastBrace > firstBrace) {
     const candidate = text.slice(firstBrace, lastBrace + 1);
     try {
       const parsed = JSON.parse(candidate);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
     } catch {
       // ignore
     }
@@ -288,19 +271,16 @@ function tryParseJsonObject(text: string): Record<string, unknown> | null {
 
 function parseGeneratedJson(raw: string): GeneratedPost | null {
   let text = raw.trim();
-  // Strip markdown code fences if the model wraps JSON in ```json ...```.
-  // Sometimes the closing fence is missing in truncated outputs, so handle both cases.
   if (text.startsWith("```")) {
-    // Remove the opening fence line: ``` or ```json
     const firstNewline = text.indexOf("\n");
     if (firstNewline >= 0) text = text.slice(firstNewline + 1).trim();
-    // Remove a trailing closing fence if present
     const lastFence = text.lastIndexOf("```");
     if (lastFence >= 0) text = text.slice(0, lastFence).trim();
   } else {
     const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (codeBlock) text = codeBlock[1].trim();
   }
+
   const parsed = tryParseJsonObject(text);
   if (!parsed) return null;
 
@@ -312,21 +292,25 @@ function parseGeneratedJson(raw: string): GeneratedPost | null {
   const excerpt = String(parsed.excerpt ?? "").trim();
   const seo_title = String(parsed.seo_title ?? title).trim();
   const seo_description = String(parsed.seo_description ?? excerpt).trim();
-    const content = String(parsed.content ?? "").trim();
+  const content = String(parsed.content ?? "").trim();
+
   const faqRaw = parsed.faq;
   let faq: { question: string; answer: string }[] | undefined;
   if (Array.isArray(faqRaw)) {
     faq = faqRaw
       .map((item) => {
         if (!item || typeof item !== "object") return null;
-        const q = String(item.question ?? "").trim();
-        const a = String(item.answer ?? "").trim();
+        const row = item as { question?: string; answer?: string };
+        const q = String(row.question ?? "").trim();
+        const a = String(row.answer ?? "").trim();
         return q && a ? { question: q, answer: a } : null;
       })
-      .filter((x) => x !== null);
+      .filter((x): x is { question: string; answer: string } => x !== null);
     if (faq.length === 0) faq = undefined;
   }
+
   if (!title || !content) return null;
+
   return {
     title,
     slug: slug || "post-" + Date.now(),
@@ -469,7 +453,7 @@ function qualityFailureToMessage(f: PostQualityFailure): string {
     case "blocked_content":
       return f.reason;
     case "sensitive_news":
-      return "Sensitive news topic — skipped for policy safety";
+      return "Sensitive topic — skipped for policy safety";
     case "too_short":
       return `Too short: ${f.words} words`;
     case "invalid_title":
@@ -482,7 +466,7 @@ function qualityFailureToMessage(f: PostQualityFailure): string {
 }
 
 export async function generateBlogPost(options?: { slot?: PostSlot }): Promise<
-  | { ok: true; post: GeneratedPost; slot: PostSlot; materialType: import("./study-material").StudyMaterialType }
+  | { ok: true; post: GeneratedPost; slot: PostSlot; materialType: StudyMaterialType }
   | { ok: false; failure: GenerateBlogPostFailure }
 > {
   const apiKey = getGeminiApiKey();
