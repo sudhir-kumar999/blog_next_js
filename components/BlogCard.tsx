@@ -25,19 +25,19 @@ export default function BlogCard({ post }: BlogCardProps) {
   const category = getFirstCategory(post.categories);
 
   return (
-    <article className="group rounded-2xl border border-zinc-200 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+    <article className="group rounded-2xl border border-zinc-200 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg sm:p-6">
       {/* Category */}
       {category && (
         <Link
           href={`/category/${category.slug}`}
-          className="mb-3 inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          className="mb-3 inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-200"
         >
           {category.name}
         </Link>
       )}
 
       {/* Title */}
-      <h2 className="text-xl font-bold leading-snug text-black transition-colors group-hover:text-blue-600 dark:text-white">
+      <h2 className="text-lg font-bold leading-snug text-zinc-900 transition-colors group-hover:text-blue-600 sm:text-xl">
         <Link href={`/blog/${post.slug}`} className="focus:outline-none">
           {post.title}
         </Link>
@@ -45,13 +45,13 @@ export default function BlogCard({ post }: BlogCardProps) {
 
       {/* Excerpt */}
       {post.excerpt && (
-        <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+        <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-600">
           {post.excerpt}
         </p>
       )}
 
       {/* Footer */}
-      <div className="mt-5 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+      <div className="mt-5 flex items-center justify-between text-xs text-zinc-500">
         <time dateTime={post.published_at}>
           {new Date(post.published_at).toLocaleDateString("en-US", {
             month: "short",

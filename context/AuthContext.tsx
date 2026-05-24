@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/browser";
 import { usePathname, useRouter } from "next/navigation";
 
 type Role = "admin" | "user";
@@ -34,8 +34,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !supabaseBrowser) {
+      setLoading(false);
+      return;
+    }
+
+    const client = supabaseBrowser;
+
     // 🔹 Initial session (refresh / first load)
-    supabaseBrowser.auth.getSession().then(async ({ data }) => {
+    client.auth.getSession().then(async ({ data }) => {
       const session = data.session ?? null;
       const user = session?.user ?? null;
 
@@ -43,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(user);
 
       if (user) {
-        const { data: profile } = await supabaseBrowser
+        const { data: profile } = await client
           .from("profiles")
           .select("role")
           .eq("id", user.id)
@@ -60,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 🔹 Auth state listener
     const {
       data: { subscription },
-    } = supabaseBrowser.auth.onAuthStateChange(
+    } = client.auth.onAuthStateChange(
       async (event, session) => {
         const user = session?.user ?? null;
 
@@ -72,14 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(null);
 
           // ❗ ONLY redirect if user was on admin route
-          if (pathname.startsWith("/admin")) {
+          if (pathname?.startsWith("/admin")) {
             router.replace("/auth/login");
           }
           return;
         }
 
         // 🔹 Fetch role
-        const { data: profile } = await supabaseBrowser
+        const { data: profile } = await client
           .from("profiles")
           .select("role")
           .eq("id", user.id)
@@ -105,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router, pathname]);
 
   async function logout() {
-    await supabaseBrowser.auth.signOut();
+    if (supabaseBrowser) await supabaseBrowser.auth.signOut();
     setUser(null);
     setSession(null);
     setRole(null);

@@ -19,11 +19,13 @@ export default function Navbar() {
 
   // 🔹 Fetch categories
   useEffect(() => {
+    if (!supabaseBrowser) return;
     supabaseBrowser
       .from("categories")
       .select("id, name, slug")
       .order("name")
-      .then(({ data }) => setCategories(data || []));
+      .then(({ data }) => setCategories(data || []))
+      .catch(() => setCategories([]));
   }, []);
 
   // Close category dropdown when clicking outside
@@ -49,11 +51,14 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/95 backdrop-blur-md">
-        <nav className="mx-auto max-w-6xl px-6 py-4">
+      <header className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/95 shadow-sm backdrop-blur-md">
+        <nav className="mx-auto max-w-6xl px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="text-xl font-bold tracking-tight text-black transition-colors hover:text-blue-600">
+            <Link
+              href="/"
+              className="text-lg font-bold tracking-tight text-zinc-900 transition-colors hover:text-blue-600 sm:text-xl"
+            >
               StudyMitra
             </Link>
 
@@ -61,7 +66,7 @@ export default function Navbar() {
             <div className="hidden items-center gap-8 md:flex">
               <Link 
                 href="/blog" 
-                className="text-sm font-medium text-zinc-700 transition-colors hover:text-black"
+                className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
               >
                 Blog
               </Link>
@@ -73,7 +78,7 @@ export default function Navbar() {
                     e.stopPropagation();
                     setOpenCat(!openCat);
                   }}
-                  className="flex items-center gap-1 text-sm font-medium text-zinc-700 transition-colors hover:text-black"
+                  className="flex items-center gap-1 text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
                 >
                   Categories
                   <svg 
@@ -108,13 +113,13 @@ export default function Navbar() {
 
               <Link 
                 href="/about" 
-                className="text-sm font-medium text-zinc-700 transition-colors hover:text-black"
+                className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
               >
                 About
               </Link>
               <Link 
                 href="/contact" 
-                className="text-sm font-medium text-zinc-700 transition-colors hover:text-black"
+                className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
               >
                 Contact
               </Link>
@@ -139,7 +144,7 @@ export default function Navbar() {
                   )}
                   <button 
                     onClick={logout} 
-                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-black"
+                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
                   >
                     Logout
                   </button>
@@ -148,7 +153,7 @@ export default function Navbar() {
                 <>
                   <Link 
                     href="/auth/login" 
-                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-black"
+                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
                   >
                     Login
                   </Link>
@@ -186,7 +191,7 @@ export default function Navbar() {
           />
           
           {/* Sidebar - Full Height */}
-          <div className="fixed right-0 top-0 z-[9999] h-screen w-full max-w-sm animate-slideIn overflow-hidden bg-white shadow-2xl md:hidden">
+          <div className="fixed right-0 top-0 z-[9999] flex h-[100dvh] w-[min(100%,20rem)] animate-slideIn flex-col overflow-hidden bg-white shadow-2xl md:hidden">
             <div className="flex h-full flex-col">
               {/* Header */}
               <div className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-6 py-5">

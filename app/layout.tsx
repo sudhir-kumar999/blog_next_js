@@ -43,9 +43,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="hi">
+    <html lang="hi" className="light">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased bg-white text-zinc-900`}
       >
         <Script
           async
@@ -68,7 +68,7 @@ export default function RootLayout({
 
         <AuthProvider>
           <Navbar />
-          <main>{children}</main>
+          <div className="flex min-w-0 flex-1 flex-col">{children}</div>
           <Footer />
           <Analytics />
         </AuthProvider>

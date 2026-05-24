@@ -4,6 +4,8 @@ import { supabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
 import { SITE_BASE_URL } from "@/lib/site-config";
 import type { Metadata } from "next";
+import AdSenseSlot from "@/components/AdSenseSlot";
+import { ADSENSE_SLOTS } from "@/lib/adsense-config";
 
 export const revalidate = 60; // ISR: revalidate every 60s; no client-side data fetch.
 
@@ -62,7 +64,7 @@ export default async function BlogPage() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="border-b border-zinc-100 bg-gradient-to-b from-zinc-50 to-white py-16 sm:py-20">
-        <div className="mx-auto max-w-4xl px-6 text-center">
+        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <div className="inline-block">
             <h1 className="bg-gradient-to-r from-black via-zinc-800 to-black bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-6xl">
               Blog
@@ -75,8 +77,14 @@ export default async function BlogPage() {
         </div>
       </section>
 
+      {ADSENSE_SLOTS.display ? (
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <AdSenseSlot slot={ADSENSE_SLOTS.display} format="horizontal" />
+        </div>
+      ) : null}
+
       {/* Main Content */}
-      <main className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
+      <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         {/* Posts Grid */}
         <section>
           {typedPosts && typedPosts.length > 0 ? (

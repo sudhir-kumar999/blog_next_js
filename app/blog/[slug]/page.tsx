@@ -6,6 +6,8 @@ import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { markdownToHtml } from "@/lib/markdown/markdownToHtml";
 import BlogContent from "@/components/BlogContent";
+import AdSenseSlot from "@/components/AdSenseSlot";
+import { ADSENSE_SLOTS } from "@/lib/adsense-config";
 import { SITE_BASE_URL } from "@/lib/site-config";
 import { countWords } from "@/lib/wordCount";
 
@@ -239,7 +241,7 @@ export default async function BlogPostPage({
           </div>
         </nav>
 
-        <main className="mx-auto max-w-3xl px-6 py-8 sm:py-12">
+        <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
           <article itemScope itemType="https://schema.org/BlogPosting">
             <meta
               itemProp="mainEntityOfPage"
@@ -314,9 +316,17 @@ export default async function BlogPostPage({
               )}
             </header>
 
+            {ADSENSE_SLOTS.display ? (
+              <AdSenseSlot slot={ADSENSE_SLOTS.display} format="horizontal" className="my-6" />
+            ) : null}
+
             <div itemProp="articleBody">
               <BlogContent html={htmlContent} />
             </div>
+
+            {ADSENSE_SLOTS.inArticle ? (
+              <AdSenseSlot slot={ADSENSE_SLOTS.inArticle} format="auto" className="my-10" />
+            ) : null}
           </article>
 
           {/* More articles – internal links help Google index "Crawled - not indexed" pages */}

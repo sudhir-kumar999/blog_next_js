@@ -1,10 +1,10 @@
 "use client";
 
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { requireSupabaseBrowser } from "@/lib/supabase/browser";
 
 export default function GoogleButton() {
   async function signInWithGoogle() {
-    await supabaseBrowser.auth.signInWithOAuth({
+    await requireSupabaseBrowser().auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${location.origin}`,

@@ -1,6 +1,6 @@
 "use client";
 
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { requireSupabaseBrowser } from "@/lib/supabase/browser";
 import AuthForm from "@/components/AuthForm";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,7 +9,8 @@ export default function LoginPage() {
   const router = useRouter();
 
   async function login(email: string, password: string) {
-    const { data, error } = await supabaseBrowser.auth.signInWithPassword({
+    const db = requireSupabaseBrowser();
+    const { data, error } = await db.auth.signInWithPassword({
       email,
       password,
     });
@@ -19,7 +20,7 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: profile } = await supabaseBrowser
+    const { data: profile } = await db
       .from("profiles")
       .select("role")
       .eq("id", data.user.id)

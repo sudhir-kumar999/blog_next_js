@@ -108,7 +108,7 @@ export default async function CategoryPage({
   return (
     <div className="min-h-screen bg-white">
       <section className="border-b border-zinc-100 bg-gradient-to-b from-zinc-50 to-white py-16 sm:py-20">
-        <div className="mx-auto max-w-4xl px-6 text-center">
+        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h1 className="text-4xl font-bold tracking-tight text-black sm:text-5xl">
             {category.name}
           </h1>
@@ -126,7 +126,7 @@ export default async function CategoryPage({
         </div>
       </section>
 
-      <main className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
+      <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         {posts && posts.length > 0 ? (
           <section className="grid gap-6 sm:grid-cols-2">
             {posts.map((post) => (

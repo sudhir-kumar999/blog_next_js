@@ -1,6 +1,6 @@
 "use client";
 
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { requireSupabaseBrowser } from "@/lib/supabase/browser";
 import AuthForm from "@/components/AuthForm";
 import GoogleButton from "@/components/GoogleButton";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,8 @@ export default function RegisterPage() {
     password: string,
     displayName?: string
   ) {
-    const { data, error } = await supabaseBrowser.auth.signUp({
+    const db = requireSupabaseBrowser();
+    const { data, error } = await db.auth.signUp({
       email,
       password,
     });
@@ -25,7 +26,7 @@ export default function RegisterPage() {
     }
 
     // Insert into profiles table
-    await supabaseBrowser.from("profiles").insert({
+    await db.from("profiles").insert({
       id: data.user?.id,
       display_name: displayName,
     });

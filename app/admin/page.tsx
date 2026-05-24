@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { requireSupabaseBrowser } from "@/lib/supabase/browser";
 
 interface Post {
   id: string;
@@ -16,7 +16,7 @@ export default function AdminPage() {
   const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    supabaseBrowser
+    requireSupabaseBrowser()
       .from("posts")
       .select(`
         id,

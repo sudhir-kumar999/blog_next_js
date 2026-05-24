@@ -1,17 +1,18 @@
-// lib/supabase/browser.ts
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-/**
- * Supabase BROWSER client
- * - Uses ANON KEY
- * - Safe for client components
- */
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+export const isSupabaseConfigured = Boolean(supabaseUrl && anonKey);
 
-if (!supabaseUrl || !anonKey) {
-  throw new Error("Missing Supabase browser environment variables");
+/** Browser Supabase client — null if env vars missing (avoids crashing public pages). */
+export const supabaseBrowser: SupabaseClient | null = isSupabaseConfigured
+  ? createClient(supabaseUrl!, anonKey!)
+  : null;
+
+export function requireSupabaseBrowser(): SupabaseClient {
+  if (!supabaseBrowser) {
+    throw new Error("Missing Supabase browser environment variables");
+  }
+  return supabaseBrowser;
 }
-
-export const supabaseBrowser = createClient(supabaseUrl, anonKey);

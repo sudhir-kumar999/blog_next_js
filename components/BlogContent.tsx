@@ -47,11 +47,13 @@ export default function BlogContent({ html }: BlogContentProps) {
         prose-th:bg-zinc-100
         prose-th:p-2
         prose-td:p-2
+        prose-table:block
+        prose-table:max-w-full
+        prose-table:overflow-x-auto
 
-        /* Dark mode */
-        dark:prose-invert
-        dark:prose-p:text-zinc-300
-        dark:prose-pre:bg-zinc-950
+        /* Mobile */
+        prose-img:max-w-full
+        prose-img:h-auto
       "
       dangerouslySetInnerHTML={{ __html: html }}
     />

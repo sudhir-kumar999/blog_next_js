@@ -1,6 +1,6 @@
 "use client";
 
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { requireSupabaseBrowser } from "@/lib/supabase/browser";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -13,7 +13,7 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabaseBrowser.auth.updateUser({
+    const { error } = await requireSupabaseBrowser().auth.updateUser({
       password,
     });
 

@@ -1,54 +1,105 @@
 import Link from "next/link";
+import AdSenseSlot from "@/components/AdSenseSlot";
+import { ADSENSE_SLOTS } from "@/lib/adsense-config";
+
+const linkClass =
+  "text-zinc-600 transition-colors hover:text-blue-600 focus-visible:text-blue-600";
 
 export default function Footer() {
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="border-t border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/60">
-      <div className="mx-auto max-w-6xl px-6 py-14">
+    <footer className="mt-auto border-t border-zinc-200 bg-zinc-50 text-zinc-700">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Brand */}
-          <div>
-            <h3 className="text-lg font-semibold text-black dark:text-white">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <Link href="/" className="text-lg font-bold text-zinc-900">
               StudyMitra
-            </h3>
-            <p className="mt-2 text-sm text-zinc-600">
-              Hindi education blog for exams, schemes, and study resources.
+            </Link>
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-zinc-600">
+              Hindi education blog — exam prep, government schemes, trending news, and study
+              guides for Indian students.
             </p>
-            <p className="mt-4 text-sm text-zinc-500">
-              Contact:{" "}
-              <Link className="font-medium text-blue-600 hover:underline" href="/contact">
+            <p className="mt-4 text-sm text-zinc-600">
+              Email:{" "}
+              <a
+                href="mailto:contact@studymitra.in"
+                className="font-medium text-blue-600 hover:underline"
+              >
                 contact@studymitra.in
-              </Link>
+              </a>
             </p>
           </div>
 
-          {/* Links */}
           <div>
-            <h4 className="font-medium text-black dark:text-white">Pages</h4>
-            <ul className="mt-3 space-y-2 text-sm text-zinc-600">
-              <li><Link href="/about">About</Link></li>
-              <li><Link href="/contact">Contact</Link></li>
-              <li><Link href="/blog">Blog</Link></li>
+            <h4 className="text-sm font-semibold uppercase tracking-wide text-zinc-900">
+              Pages
+            </h4>
+            <ul className="mt-4 space-y-2.5 text-sm">
+              <li>
+                <Link href="/blog" className={linkClass}>
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className={linkClass}>
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className={linkClass}>
+                  Contact
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
-            <h4 className="font-medium text-black dark:text-white">Legal</h4>
-            <ul className="mt-3 space-y-2 text-sm text-zinc-600">
-              <li><Link href="/privacy-policy">Privacy Policy</Link></li>
-              <li><Link href="/terms">Terms & Conditions</Link></li>
-              <li><Link href="/disclaimer">Disclaimer</Link></li>
+            <h4 className="text-sm font-semibold uppercase tracking-wide text-zinc-900">
+              Legal
+            </h4>
+            <ul className="mt-4 space-y-2.5 text-sm">
+              <li>
+                <Link href="/privacy-policy" className={linkClass}>
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className={linkClass}>
+                  Terms &amp; Conditions
+                </Link>
+              </li>
+              <li>
+                <Link href="/disclaimer" className={linkClass}>
+                  Disclaimer
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Copyright */}
           <div>
-            <h4 className="font-medium text-black dark:text-white">© {new Date().getFullYear()}</h4>
-            <p className="mt-2 text-sm text-zinc-600">All rights reserved.</p>
-            <p className="mt-3 text-xs text-zinc-500">
-              Some links may be external. Ads may appear via Google AdSense.
+            <h4 className="text-sm font-semibold uppercase tracking-wide text-zinc-900">
+              Follow
+            </h4>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-600">
+              Daily useful posts in simple Hindi. Share with friends on WhatsApp.
             </p>
           </div>
+        </div>
+
+        {ADSENSE_SLOTS.footer ? (
+          <div className="mt-10 border-t border-zinc-200 pt-8">
+            <AdSenseSlot slot={ADSENSE_SLOTS.footer} format="horizontal" label="Sponsored" />
+          </div>
+        ) : null}
+
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-zinc-200 pt-8 text-center sm:flex-row sm:text-left">
+          <p className="text-sm text-zinc-600">
+            © {year} StudyMitra. All rights reserved.
+          </p>
+          <p className="text-xs text-zinc-500">
+            Ads by Google AdSense. External links may open third-party sites.
+          </p>
         </div>
       </div>
     </footer>

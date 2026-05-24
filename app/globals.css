@@ -1,16 +1,19 @@
 @import "tailwindcss";
 
-/* Global tokens */
+/* Only apply dark: utilities when .dark class is set — avoids invisible text on OS dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
-  --foreground: #0a0a0a;
-  --muted: #52525b; /* zinc-600 */
-  --muted-2: #71717a; /* zinc-500 */
-  --border: #e4e4e7; /* zinc-200 */
-  --ring: #2563eb; /* blue-600 */
+  --foreground: #18181b;
+  --muted: #52525b;
+  --border: #e4e4e7;
+  --ring: #2563eb;
 }
 
-/* Keep a consistent light theme across devices. */
+html {
+  color-scheme: light;
+}
 
 body {
   background: var(--background);
@@ -18,6 +21,7 @@ body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI,
     Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
@@ -31,7 +35,28 @@ button:focus-visible {
   border-radius: 0.5rem;
 }
 
-/* Home page post cards fade-in (was missing – caused blank posts) */
+/* Responsive AdSense — prevent overflow on mobile */
+.ad-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ad-wrap ins.adsbygoogle {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 640px) {
+  .ad-wrap {
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
