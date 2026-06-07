@@ -7,6 +7,8 @@ import { supabaseServer } from "@/lib/supabase/server";
 import BlogArticleBody from "@/components/BlogArticleBody";
 import AdSenseSlot from "@/components/AdSenseSlot";
 import { buildFaqPageJsonLd, extractFaqFromContent } from "@/lib/aeo";
+import { extractMockTestsFromMarkdown } from "@/lib/mock-test/parse";
+import { buildBreadcrumbJsonLd, buildQuizJsonLd, keywordsForPost } from "@/lib/seo";
 import { ADSENSE_SLOTS } from "@/lib/adsense-config";
 import { SITE_BASE_URL } from "@/lib/site-config";
 import { countWords } from "@/lib/wordCount";
@@ -85,7 +87,11 @@ export async function generateMetadata({
     title,
     description,
     robots: { index: true, follow: true },
-    keywords: category?.name ? [category.name] : [],
+    keywords: keywordsForPost({
+      title: post.title,
+      categorySlug: category?.slug,
+      slug,
+    }),
     authors: [{ name: "Study Mitra", url: baseUrl }],
     openGraph: {
       title,
@@ -95,7 +101,8 @@ export async function generateMetadata({
       publishedTime: post.published_at,
       modifiedTime: post.updated_at,
       section: category?.name,
-      images: post.featured_image ? [post.featured_image] : [],
+      locale: "hi_IN",
+      images: post.featured_image ? [post.featured_image] : [`${baseUrl}/icon.svg`],
     },
     twitter: {
       card: "summary_large_image",
@@ -153,18 +160,42 @@ export default async function BlogPostPage({
     .limit(4);
 
   const faqs = extractFaqFromContent(post.content || "");
+  const mockTests = extractMockTestsFromMarkdown(post.content || "");
   const category = Array.isArray(post.categories) ? post.categories[0] : post.categories;
 
   const postUrl = `${baseUrl}/blog/${slug}`;
   const faqJsonLd = buildFaqPageJsonLd(faqs, postUrl);
+  const quizJsonLd =
+    mockTests[0] &&
+    buildQuizJsonLd({
+      postUrl,
+      title: post.title,
+      description: post.seo_description || post.excerpt || post.title,
+      mockTest: mockTests[0],
+    });
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: baseUrl },
+    { name: "Blog", url: `${baseUrl}/blog` },
+    ...(category
+      ? [{ name: category.name, url: `${baseUrl}/category/${category.slug}` }]
+      : []),
+    { name: post.title, url: postUrl },
+  ]);
   const wordCount = countWords(post.content || "");
   const readingMinutes = Math.max(1, Math.round(wordCount / 220));
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     url: postUrl,
-    headline: post.title,
-    description: post.excerpt || undefined,
+    headline: post.seo_title || post.title,
+    description: post.seo_description || post.excerpt || undefined,
+    articleSection: category?.name,
+    inLanguage: "hi-IN",
+    keywords: keywordsForPost({
+      title: post.title,
+      categorySlug: category?.slug,
+      slug,
+    }).join(", "),
     image: post.featured_image ? [post.featured_image] : undefined,
     datePublished: post.published_at,
     dateModified: post.updated_at || post.published_at,
@@ -201,6 +232,16 @@ export default async function BlogPostPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       ) : null}
+      {quizJsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(quizJsonLd) }}
+        />
+      ) : null}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
 
       <div className="min-h-screen bg-white">
         {/* Breadcrumb Navigation */}

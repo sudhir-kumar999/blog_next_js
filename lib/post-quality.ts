@@ -1,6 +1,8 @@
 import type { GeneratedPost } from "./gemini";
 import { embedFaqComment, hasDirectAnswerBlock } from "./aeo";
-import { stripMockTestBlocks } from "@/lib/mock-test/parse";
+import { extractMockTestsFromMarkdown, stripMockTestBlocks } from "@/lib/mock-test/parse";
+import { ensureMockTestSeoFields } from "@/lib/seo";
+import type { StudyMaterialType } from "@/lib/study-material";
 import { countWords, MIN_POST_WORDS } from "./wordCount";
 
 const BLOCKED_CONTENT_PATTERNS: RegExp[] = [
@@ -23,6 +25,7 @@ export type PostQualityFailure =
   | { kind: "too_short"; words: number }
   | { kind: "invalid_title" }
   | { kind: "missing_aeo"; reason: string }
+  | { kind: "missing_mock_test"; reason: string }
   | { kind: "sensitive_news" };
 
 export function sanitizeSlug(slug: string): string {
@@ -39,7 +42,10 @@ export function sanitizeSlug(slug: string): string {
 }
 
 /** AI output normalization: SEO fields + embedded FAQ for schema (no manual editing). */
-export function enrichPostForSeo(post: GeneratedPost): GeneratedPost {
+export function enrichPostForSeo(
+  post: GeneratedPost,
+  options?: { materialType?: StudyMaterialType }
+): GeneratedPost {
   const faq = post.faq?.filter((f) => f.question?.trim() && f.answer?.trim()) ?? [];
   let content = post.content.trim();
 
@@ -51,19 +57,32 @@ export function enrichPostForSeo(post: GeneratedPost): GeneratedPost {
     content = embedFaqComment(content, faq);
   }
 
+  let seo_title = (post.seo_title || post.title).trim().slice(0, 70);
+  let seo_description = (post.seo_description || post.excerpt).trim().slice(0, 160);
+
+  if (options?.materialType === "mock-test" || options?.materialType === "questions") {
+    const examHint = post.title.split(/[—–:-]/)[0]?.trim() || "Exam";
+    const fixed = ensureMockTestSeoFields(seo_title, seo_description, examHint);
+    seo_title = fixed.seo_title;
+    seo_description = fixed.seo_description;
+  }
+
   return {
     ...post,
     slug: sanitizeSlug(post.slug),
     title: post.title.trim().slice(0, 120),
     excerpt: post.excerpt.trim().slice(0, 160),
-    seo_title: (post.seo_title || post.title).trim().slice(0, 70),
-    seo_description: (post.seo_description || post.excerpt).trim().slice(0, 160),
+    seo_title,
+    seo_description,
     content,
     faq: faq.length > 0 ? faq : undefined,
   };
 }
 
-export function validatePostQuality(post: GeneratedPost): PostQualityFailure | null {
+export function validatePostQuality(
+  post: GeneratedPost,
+  options?: { materialType?: StudyMaterialType }
+): PostQualityFailure | null {
   if (!post.title?.trim() || post.title.trim().length < 8) {
     return { kind: "invalid_title" };
   }
@@ -91,6 +110,24 @@ export function validatePostQuality(post: GeneratedPost): PostQualityFailure | n
   const faqCount = post.faq?.length ?? (post.content.match(/\*\*प्रश्न:\*\*/g)?.length ?? 0);
   if (faqCount < 4) {
     return { kind: "missing_aeo", reason: "Need at least 4 FAQ items for AEO" };
+  }
+
+  if (options?.materialType === "mock-test" || options?.materialType === "questions") {
+    const tests = extractMockTestsFromMarkdown(post.content);
+    if (tests.length === 0) {
+      return {
+        kind: "missing_mock_test",
+        reason:
+          'Missing ```mock-test JSON fence with interactive quiz (mcq/tf/short). Plain-text MCQ lists are rejected.',
+      };
+    }
+    const minQ = options.materialType === "mock-test" ? 8 : 5;
+    if (tests[0].questions.length < minQ) {
+      return {
+        kind: "missing_mock_test",
+        reason: `Mock test needs at least ${minQ} questions in JSON, got ${tests[0].questions.length}`,
+      };
+    }
   }
 
   const words = countWords(stripMockTestBlocks(post.content));

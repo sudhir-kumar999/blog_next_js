@@ -7,6 +7,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import BlogCard from "@/components/BlogCard";
 import { SITE_BASE_URL } from "@/lib/site-config";
 import { STUDY_NAV_CATEGORIES } from "@/lib/study-nav";
+import { categorySeo } from "@/lib/seo";
 
 export const revalidate = 60; // ISR – SEO friendly
 export const dynamicParams = true;
@@ -62,17 +63,20 @@ export async function generateMetadata({
     };
   }
 
+  const seo = categorySeo(slug, name);
   const url = `${SITE_BASE_URL}/category/${slug}`;
   return {
-    title: `${name} — Study Material`,
-    description: `Hindi ${name.toLowerCase()} for competitive and board exams on StudyMitra.`,
+    title: seo.title,
+    description: seo.description,
+    keywords: seo.keywords,
     robots: { index: true, follow: true },
     alternates: { canonical: url },
     openGraph: {
-      title: `${name} — Study Material`,
-      description: `Hindi ${name.toLowerCase()} for competitive and board exams.`,
+      title: seo.title,
+      description: seo.description,
       type: "website",
       url,
+      locale: "hi_IN",
     },
   };
 }
@@ -101,6 +105,8 @@ export default async function CategoryPage({
     notFound();
   }
 
+  const seo = categorySeo(displayCategory.slug, displayCategory.name);
+
   let postsQuery = supabaseServer
     .from("posts")
     .select(`
@@ -128,10 +134,10 @@ export default async function CategoryPage({
       <section className="border-b border-zinc-100 bg-gradient-to-b from-zinc-50 to-white py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h1 className="text-4xl font-bold tracking-tight text-black sm:text-5xl">
-            {displayCategory.name}
+            {seo.h1}
           </h1>
           <p className="mt-4 text-zinc-600 sm:text-lg">
-            Latest study material in {displayCategory.name}
+            {seo.intro}
           </p>
           <div className="mt-8">
             <Link

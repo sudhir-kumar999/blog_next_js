@@ -81,9 +81,12 @@ CONTENT STRUCTURE (interactive online mock test):${AEO_HEADING}
 ## 🎯 कैसे करें
 4-6 bullets — time limit, attempt all questions, then click "Score Check".
 
-## 🧪 इंटरैक्टिव मॉक टेस्ट (REQUIRED)
-Include exactly ONE \`\`\`mock-test fenced JSON block with ${q} questions.
-Do NOT paste plain-text MCQ list with answers in markdown — answers only in JSON.
+## 🧪 इंटरैक्टिव मॉक टेस्ट (REQUIRED — WILL BE REJECTED WITHOUT THIS)
+You MUST include exactly ONE fenced block starting with the line \`\`\`mock-test (three backticks + mock-test).
+Then valid JSON on following lines, then closing \`\`\` on its own line.
+${q} questions inside JSON — NOT as plain markdown MCQ list.
+Do NOT use \`\`\`json — use \`\`\`mock-test only.
+Do NOT paste answers in markdown outside the fence.
 ${MOCK_TEST_JSON_HELP}
 Mix: ~70% mcq, ~20% tf, ~10% short.
 
@@ -105,8 +108,9 @@ Exam + difficulty level.
 ## 📌 पेपर पैटर्न
 4-6 bullets.
 
-## 🧪 ऑनलाइन प्रैक्टिस क्विज़ (REQUIRED)
-ONE \`\`\`mock-test JSON block with ${q} questions (mcq + at least 1 tf).
+## 🧪 ऑनलाइन प्रैक्टिस क्विज़ (REQUIRED — REJECTED WITHOUT \`\`\`mock-test FENCE)
+ONE \`\`\`mock-test fenced JSON block with ${q} questions (mcq + at least 1 tf).
+Fence format: line 1 = \`\`\`mock-test , then JSON, then closing \`\`\`.
 Users answer on page and check score — no answer key in plain markdown.
 ${MOCK_TEST_JSON_HELP}
 
@@ -157,11 +161,23 @@ export function buildPrompt(
 
   const seoHint =
     topic.materialType === "mock-test" || topic.materialType === "questions"
-      ? 'seo_title/seo_description must include "online mock test" or "practice quiz" + exam name + 2026.'
+      ? 'seo_title MUST include "Online Mock Test" + exam name + Hindi + 2026. seo_description MUST include "interactive", "score check", "MCQ".'
+      : topic.materialType === "notes"
+        ? 'seo_title include exam name + "Notes Hindi" + 2026.'
+        : 'seo_title include exam + "Vacancy" + Hindi + 2026.';
+
+  const mockFenceRule =
+    topic.materialType === "mock-test" || topic.materialType === "questions"
+      ? `
+CRITICAL (auto-publish rejects without this):
+- "content" MUST contain a \`\`\`mock-test fenced JSON block with questions array.
+- Never output plain-text numbered MCQs with answers in markdown.
+- Never use \`\`\`json for the quiz — only \`\`\`mock-test.`
       : "";
 
   return `You are a Hindi study-material writer for StudyMitra.
 ONLY: notes, practice questions, mock tests, vacancy guides. NO news, NO lifestyle viral posts.
+${mockFenceRule}
 
 Today: ${month} ${year}. Slot: ${slot === 0 ? "notes or mock test" : "questions or vacancy"}.
 Return ONLY valid JSON: title, slug, excerpt, seo_title, seo_description, content, faq (6-8 {question, answer} in Hindi).

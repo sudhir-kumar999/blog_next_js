@@ -5,17 +5,23 @@ import { SITE_BASE_URL } from "@/lib/site-config";
 import type { Metadata } from "next";
 import AdSenseSlot from "@/components/AdSenseSlot";
 import { ADSENSE_SLOTS } from "@/lib/adsense-config";
+import { buildOrganizationJsonLd, buildWebsiteJsonLd, SITE_KEYWORDS } from "@/lib/seo";
 
 export const revalidate = 60; // ISR for SEO + fresh content
 
 export const metadata: Metadata = {
-  title: "StudyMitra — नोट्स, प्रश्न, मॉक टेस्ट, वैकेंसी",
-  description: "SSC, Railway, UPSC, NEET, Board — study notes, practice questions, mock tests और vacancy details हिंदी में।",
+  title: "StudyMitra — Online Mock Test Hindi, Notes, MCQ, Vacancy 2026",
+  description:
+    "Free Hindi study material: online mock test with score check, SSC/Railway/NEET/UPSC notes, MCQ practice, and sarkari vacancy details. StudyMitra — exam preparation in Hindi.",
+  keywords: SITE_KEYWORDS,
   alternates: { canonical: SITE_BASE_URL },
   openGraph: {
     url: SITE_BASE_URL,
-    title: "StudyMitra — नोट्स, प्रश्न, मॉक टेस्ट, वैकेंसी",
-    description: "SSC, Railway, UPSC, NEET, Board — study notes, practice questions, mock tests और vacancy details हिंदी में।",
+    title: "StudyMitra — Online Mock Test Hindi, Notes, MCQ 2026",
+    description:
+      "Interactive online mock test Hindi, exam notes, practice MCQ, and vacancy guides for Indian students.",
+    locale: "hi_IN",
+    type: "website",
   },
   robots: { index: true, follow: true },
 };
@@ -39,6 +45,14 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildWebsiteJsonLd()) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildOrganizationJsonLd()) }}
+      />
       {/* Hero */}
       <section className="border-b border-zinc-100 bg-gradient-to-b from-zinc-50 to-white py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
@@ -49,7 +63,7 @@ export default async function Home() {
             <div className="mt-3 h-1 w-full bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
           </div>
           <p className="mt-6 text-lg text-zinc-600 sm:text-xl">
-            Study notes, practice questions, mock tests aur sarkari exam vacancy — sirf padhai, simple Hindi me.
+            Online mock test Hindi, exam notes, MCQ practice aur sarkari vacancy — SSC, Railway, NEET, UPSC ke liye.
           </p>
 
           <div className="mt-8 flex flex-wrap justify-center gap-2 text-sm">

@@ -59,11 +59,17 @@ function getGeminiModels(): string[] {
 }
 
 function isRetryableFailure(failure: GenerateBlogPostFailure): boolean {
-  return (
+  if (
     failure.kind === "json_parse_failed" ||
     failure.kind === "truncated_response" ||
     failure.kind === "too_short"
-  );
+  ) {
+    return true;
+  }
+  if (failure.kind === "content_blocked") {
+    return /mock-test|interactive quiz|Missing ```mock-test/i.test(failure.reason);
+  }
+  return false;
 }
 
 function parseGeminiApiError(err: unknown): GenerateBlogPostFailure {
@@ -373,6 +379,8 @@ async function attemptGenerate(
   | { ok: true; post: GeneratedPost }
   | { ok: false; failure: GenerateBlogPostFailure }
 > {
+  const resolvedMaterialType =
+    materialType ?? resolveStudyTopic(slot).materialType;
   const ai = new GoogleGenAI({ apiKey });
   let response: Awaited<ReturnType<typeof ai.models.generateContent>> | null = null;
   let lastApiFailure: GenerateBlogPostFailure | null = null;
@@ -436,8 +444,8 @@ async function attemptGenerate(
     return { ok: false, failure: { kind: "too_short", words, minWords } };
   }
 
-  const enriched = enrichPostForSeo(post);
-  const qualityIssue = validatePostQuality(enriched);
+  const enriched = enrichPostForSeo(post, { materialType: resolvedMaterialType });
+  const qualityIssue = validatePostQuality(enriched, { materialType: resolvedMaterialType });
   if (qualityIssue) {
     const reason = qualityFailureToMessage(qualityIssue);
     console.error("[gemini] content quality blocked:", reason);
@@ -458,6 +466,8 @@ function qualityFailureToMessage(f: PostQualityFailure): string {
     case "invalid_title":
       return "Invalid or missing title";
     case "missing_aeo":
+      return f.reason;
+    case "missing_mock_test":
       return f.reason;
     default:
       return "Content quality check failed";

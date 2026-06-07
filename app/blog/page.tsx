@@ -9,11 +9,14 @@ import { ADSENSE_SLOTS } from "@/lib/adsense-config";
 
 export const revalidate = 60; // ISR: revalidate every 60s; no client-side data fetch.
 
+import { SITE_KEYWORDS } from "@/lib/seo";
+
 const blogUrl = `${SITE_BASE_URL}/blog`;
 export const metadata: Metadata = {
-  title: "Study Material Blog — Notes, MCQs, Mock Tests",
+  title: "Exam Blog Hindi — Mock Test, Notes, MCQ, Vacancy 2026",
   description:
-    "Latest Hindi study posts: exam notes, practice questions, mock tests, and government vacancy guides for Indian students.",
+    "Latest Hindi exam blog: online mock test, SSC/Railway/NEET/UPSC notes, interactive MCQ practice, and government vacancy updates on StudyMitra.",
+  keywords: SITE_KEYWORDS,
   alternates: { canonical: blogUrl },
   openGraph: {
     url: blogUrl,
