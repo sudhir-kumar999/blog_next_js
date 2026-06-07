@@ -4,8 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
-import { renderMarkdownContent } from "@/lib/markdown/renderContent";
-import BlogContentRenderer from "@/components/BlogContentRenderer";
+import BlogArticleBody from "@/components/BlogArticleBody";
 import AdSenseSlot from "@/components/AdSenseSlot";
 import { buildFaqPageJsonLd, extractFaqFromContent } from "@/lib/aeo";
 import { ADSENSE_SLOTS } from "@/lib/adsense-config";
@@ -154,7 +153,6 @@ export default async function BlogPostPage({
     .limit(4);
 
   const faqs = extractFaqFromContent(post.content || "");
-  const contentSegments = renderMarkdownContent(post.content || "");
   const category = Array.isArray(post.categories) ? post.categories[0] : post.categories;
 
   const postUrl = `${baseUrl}/blog/${slug}`;
@@ -327,7 +325,7 @@ export default async function BlogPostPage({
             </header>
 
             <div itemProp="articleBody">
-              <BlogContentRenderer segments={contentSegments} />
+              <BlogArticleBody content={post.content || ""} />
             </div>
 
             {wordCount >= 800 && ADSENSE_SLOTS.display ? (

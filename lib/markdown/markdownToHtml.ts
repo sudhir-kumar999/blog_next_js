@@ -1,5 +1,6 @@
 import { marked } from "marked";
 import { stripFaqComment } from "@/lib/aeo";
+import { parseMockTestJson, looksLikeMockTestJson } from "@/lib/mock-test/parse";
 import { sanitizeBlogHtml } from "@/lib/markdown/sanitizeHtml";
 
 const renderer = new marked.Renderer();
@@ -68,6 +69,19 @@ renderer.table = ({ header, rows }) => {
 
 /* ---------------- CODE BLOCK ---------------- */
 renderer.code = ({ text, lang }) => {
+  const langNorm = (lang || "").toLowerCase();
+  if (
+    langNorm === "mock-test" ||
+    langNorm === "mocktest" ||
+    (langNorm === "json" && looksLikeMockTestJson(text))
+  ) {
+    const parsed = parseMockTestJson(text);
+    if (parsed) {
+      // renderContent extracts quiz blocks; this hides raw JSON if a block slips through
+      return "";
+    }
+  }
+
   return `
     <pre class="my-6 rounded-xl bg-zinc-900 p-4 overflow-x-auto">
       <code class="language-${lang || "text"} text-zinc-100">
