@@ -203,6 +203,22 @@ export function resolveStudyTopic(slot: PostSlot): ResolvedStudyTopic {
   };
 }
 
+/** Force a material type (e.g. mock-test for manual generation). */
+export function resolveStudyTopicForType(
+  materialType: StudyMaterialType,
+  slot: PostSlot = 0
+): ResolvedStudyTopic {
+  const today = new Date();
+  const dateSeed =
+    today.getFullYear() * 10000 +
+    (today.getMonth() + 1) * 100 +
+    today.getDate() +
+    slot * 997;
+  const pool = POOLS[materialType];
+  const index = dateSeed % pool.length;
+  return { ...pool[index], materialType };
+}
+
 export function parsePostSlot(req: Request): PostSlot {
   const url = new URL(req.url);
   const p = url.searchParams.get("slot");

@@ -1,6 +1,7 @@
 import { GOOGLE_SAFE_RULES, QUALITY_SEO_RULES, AEO_RULES } from "./google-safe-prompt";
 import {
   resolveStudyTopic,
+  resolveStudyTopicForType,
   type PostSlot,
   type StudyMaterialType,
 } from "./study-material";
@@ -21,6 +22,20 @@ const FAQ_HEADING = `
 ## 💬 लोग ये भी पूछते हैं (FAQ)
 Minimum 6 pairs — **प्रश्न:** ... **उत्तर:** ... (2-4 sentences each).`;
 
+const MOCK_TEST_JSON_HELP = `
+MOCK_TEST_JSON (inside a single \`\`\`mock-test code fence in "content"):
+{
+  "title": "Hindi mock test title",
+  "durationMinutes": 30,
+  "questions": [
+    { "id": "1", "type": "mcq", "text": "प्रश्न?", "options": ["A","B","C","D"], "correctIndex": 0, "explanation": "Hindi" },
+    { "id": "2", "type": "tf", "text": "कथन", "correct": true, "explanation": "Hindi" },
+    { "id": "3", "type": "short", "text": "रिक्त स्थान भरें", "acceptableAnswers": ["उत्तर"], "explanation": "Hindi" }
+  ]
+}
+Question types: mcq (options + correctIndex 0-3), tf (correct true/false), short (acceptableAnswers array).
+All question text and explanations in Hindi Devanagari.`;
+
 function getCurrentYearMonth(): { year: number; month: string } {
   const today = new Date();
   const year = today.getFullYear();
@@ -33,8 +48,7 @@ function getCurrentYearMonth(): { year: number; month: string } {
 
 export function buildContentStructure(
   materialType: StudyMaterialType,
-  mcqCount: number,
-  factCount: number
+  compact: boolean
 ): string {
   if (materialType === "notes") {
     return `
@@ -56,39 +70,51 @@ Memory hooks and exam traps.${FAQ_HEADING}
 2 lines — revision reminder.`;
   }
 
-  if (materialType === "questions") {
+  if (materialType === "mock-test") {
+    const q = compact ? 10 : 15;
     return `
-CONTENT STRUCTURE (practice questions):${AEO_HEADING}
+CONTENT STRUCTURE (interactive online mock test):${AEO_HEADING}
+
+## 📝 मॉक टेस्ट परिचय
+2-3 paragraphs: exam, syllabus, how to use this interactive mock on StudyMitra.
+
+## 🎯 कैसे करें
+4-6 bullets — time limit, attempt all questions, then click "Score Check".
+
+## 🧪 इंटरैक्टिव मॉक टेस्ट (REQUIRED)
+Include exactly ONE \`\`\`mock-test fenced JSON block with ${q} questions.
+Do NOT paste plain-text MCQ list with answers in markdown — answers only in JSON.
+${MOCK_TEST_JSON_HELP}
+Mix: ~70% mcq, ~20% tf, ~10% short.
+
+## 📊 स्कोर के बाद
+Revision tips for weak areas — 2 paragraphs.${FAQ_HEADING}
+
+## निष्कर्ष
+2 lines.`;
+  }
+
+  if (materialType === "questions") {
+    const q = compact ? 8 : 10;
+    return `
+CONTENT STRUCTURE (practice questions + interactive quiz):${AEO_HEADING}
 
 ## 🎯 किस परीक्षा के लिए?
-Clear exam label.
+Exam + difficulty level.
 
 ## 📌 पेपर पैटर्न
 4-6 bullets.
 
-## ❓ ${mcqCount} प्रश्न (उत्तर + व्याख्या)
-**Q1.** (A)(B)(C)(D) ✅ **उत्तर: (X)** 💡 **व्याख्या:**${FAQ_HEADING}
+## 🧪 ऑनलाइन प्रैक्टिस क्विज़ (REQUIRED)
+ONE \`\`\`mock-test JSON block with ${q} questions (mcq + at least 1 tf).
+Users answer on page and check score — no answer key in plain markdown.
+${MOCK_TEST_JSON_HELP}
+
+## 📖 सामान्य गलतियाँ
+2 paragraphs.${FAQ_HEADING}
 
 ## निष्कर्ष
-Daily practice — 2 lines.`;
-  }
-
-  if (materialType === "mock-test") {
-    const q = Math.min(mcqCount, 50);
-    return `
-CONTENT STRUCTURE (mock test):${AEO_HEADING}
-
-## 📝 मॉक टेस्ट विवरण
-Questions, time, marking.
-
-## 📋 प्रश्न पत्र (${q} MCQ)
-**Q1.** (A)(B)(C)(D)
-
-## ✅ उत्तर कुंजी + समाधान
-Full answers.${FAQ_HEADING}
-
-## निष्कर्ष
-2 lines.`;
+Daily practice reminder.`;
   }
 
   return `
@@ -110,20 +136,29 @@ Stages.${FAQ_HEADING}
 2 lines.`;
 }
 
-export function buildPrompt(compact = false, slot: PostSlot = 0): string {
-  const topic = resolveStudyTopic(slot);
+export function buildPrompt(
+  compact = false,
+  slot: PostSlot = 0,
+  materialType?: StudyMaterialType
+): string {
+  const topic = materialType
+    ? resolveStudyTopicForType(materialType, slot)
+    : resolveStudyTopic(slot);
   const { year, month } = getCurrentYearMonth();
   const minWords = compact ? 1200 : MIN_POST_WORDS;
-  const mcqCount = compact ? 10 : 12;
-  const factCount = compact ? 8 : 10;
   const typeLabel = MATERIAL_TYPE_LABELS[topic.materialType];
 
   const titleExamples: Record<StudyMaterialType, string> = {
     notes: '"SSC CGL 2026 Notes Hindi" / "NEET Biology Short Notes"',
-    questions: '"50 SSC Math MCQ with Answers"',
-    "mock-test": '"RRB NTPC Full Mock Test Hindi"',
+    questions: '"50 SSC Math MCQ Online Practice Hindi"',
+    "mock-test": '"RRB NTPC Online Mock Test Hindi 2026"',
     vacancy: '"SSC CGL 2026 Vacancy Details Hindi"',
   };
+
+  const seoHint =
+    topic.materialType === "mock-test" || topic.materialType === "questions"
+      ? 'seo_title/seo_description must include "online mock test" or "practice quiz" + exam name + 2026.'
+      : "";
 
   return `You are a Hindi study-material writer for StudyMitra.
 ONLY: notes, practice questions, mock tests, vacancy guides. NO news, NO lifestyle viral posts.
@@ -134,19 +169,20 @@ Return ONLY valid JSON: title, slug, excerpt, seo_title, seo_description, conten
 TITLE: Under 70 chars | Examples: ${titleExamples[topic.materialType]}
 Reader benefit: ${topic.viralAngle}
 Type: ${typeLabel}
+${seoHint}
 
 TOPIC: ${topic.category}
 Focus: ${topic.hint}
 Keywords (natural 2-4x): ${topic.keywords}
 
-RULES: Hindi (Devanagari) | Min ${minWords} words | No fake vacancies/dates
+RULES: Hindi (Devanagari) | Min ${minWords} words in markdown (excluding JSON fence) | No fake vacancies/dates
 
 ${GOOGLE_SAFE_RULES}
 ${QUALITY_SEO_RULES}
 ${AEO_RULES}
 
-${buildContentStructure(topic.materialType, mcqCount, factCount)}
+${buildContentStructure(topic.materialType, compact)}
 
-SLUG: English, lowercase, hyphens, exam + type (e.g. ssc-cgl-notes-hindi-2026).
-Return COMPLETE JSON only.`;
+SLUG: English, lowercase, hyphens, exam + type (e.g. railway-mock-test-hindi-2026).
+Return COMPLETE JSON only — never truncate the mock-test JSON block.`;
 }

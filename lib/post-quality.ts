@@ -1,5 +1,6 @@
 import type { GeneratedPost } from "./gemini";
 import { embedFaqComment, hasDirectAnswerBlock } from "./aeo";
+import { stripMockTestBlocks } from "@/lib/mock-test/parse";
 import { countWords, MIN_POST_WORDS } from "./wordCount";
 
 const BLOCKED_CONTENT_PATTERNS: RegExp[] = [
@@ -92,7 +93,7 @@ export function validatePostQuality(post: GeneratedPost): PostQualityFailure | n
     return { kind: "missing_aeo", reason: "Need at least 4 FAQ items for AEO" };
   }
 
-  const words = countWords(post.content);
+  const words = countWords(stripMockTestBlocks(post.content));
   if (words < MIN_POST_WORDS) {
     return { kind: "too_short", words };
   }

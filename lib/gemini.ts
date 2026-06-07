@@ -1,11 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
-import {
-  resolveStudyTopic,
-  type PostSlot,
-  type StudyMaterialType,
-} from "./study-material";
+import { resolveStudyTopic, type PostSlot, type StudyMaterialType } from "./study-material";
 import { enrichPostForSeo, validatePostQuality, type PostQualityFailure } from "./post-quality";
 import { countWords, MIN_POST_WORDS } from "./wordCount";
+import { stripMockTestBlocks } from "./mock-test/parse";
 import { buildPrompt } from "./gemini-prompts";
 
 export type { PostSlot } from "./study-material";
@@ -326,11 +323,12 @@ async function generateWithModel(
   ai: GoogleGenAI,
   model: string,
   compact: boolean,
-  slot: PostSlot
+  slot: PostSlot,
+  materialType?: StudyMaterialType
 ): Promise<Awaited<ReturnType<typeof ai.models.generateContent>>> {
   return ai.models.generateContent({
     model,
-    contents: buildPrompt(compact, slot),
+    contents: buildPrompt(compact, slot, materialType),
     config: {
       maxOutputTokens: MAX_OUTPUT_TOKENS,
       temperature: 0.6,
@@ -369,7 +367,8 @@ async function generateWithModel(
 async function attemptGenerate(
   apiKey: string,
   compact: boolean,
-  slot: PostSlot
+  slot: PostSlot,
+  materialType?: StudyMaterialType
 ): Promise<
   | { ok: true; post: GeneratedPost }
   | { ok: false; failure: GenerateBlogPostFailure }
@@ -380,7 +379,7 @@ async function attemptGenerate(
 
   for (const model of getGeminiModels()) {
     try {
-      response = await generateWithModel(ai, model, compact, slot);
+      response = await generateWithModel(ai, model, compact, slot, materialType);
       break;
     } catch (err) {
       lastApiFailure = parseGeminiApiError(err);
@@ -431,7 +430,7 @@ async function attemptGenerate(
   }
 
   const minWords = compact ? 1200 : MIN_POST_WORDS;
-  const words = countWords(post.content);
+  const words = countWords(stripMockTestBlocks(post.content));
   if (words < minWords) {
     console.error(`[gemini] generated content too short: ${words} words (min ${minWords}).`);
     return { ok: false, failure: { kind: "too_short", words, minWords } };
@@ -465,7 +464,10 @@ function qualityFailureToMessage(f: PostQualityFailure): string {
   }
 }
 
-export async function generateBlogPost(options?: { slot?: PostSlot }): Promise<
+export async function generateBlogPost(options?: {
+  slot?: PostSlot;
+  materialType?: StudyMaterialType;
+}): Promise<
   | { ok: true; post: GeneratedPost; slot: PostSlot; materialType: StudyMaterialType }
   | { ok: false; failure: GenerateBlogPostFailure }
 > {
@@ -473,6 +475,7 @@ export async function generateBlogPost(options?: { slot?: PostSlot }): Promise<
   if (!apiKey) return { ok: false, failure: { kind: "missing_api_key" } };
 
   const slot: PostSlot = options?.slot ?? 0;
+  const forcedType = options?.materialType;
   const forceCompact =
     process.env.GEMINI_COMPACT === "1" || process.env.GEMINI_COMPACT === "true";
   const modes: boolean[] = forceCompact ? [true] : [false, true];
@@ -483,9 +486,10 @@ export async function generateBlogPost(options?: { slot?: PostSlot }): Promise<
     if (attempts >= MAX_GENERATION_ATTEMPTS) break;
     attempts++;
 
-    const result = await attemptGenerate(apiKey, compact, slot);
+    const result = await attemptGenerate(apiKey, compact, slot, forcedType);
     if (result.ok) {
-      const materialType = resolveStudyTopic(slot).materialType;
+      const materialType =
+        forcedType ?? resolveStudyTopic(slot).materialType;
       return { ...result, slot, materialType };
     }
 
