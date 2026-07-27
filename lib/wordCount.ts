@@ -1,4 +1,4 @@
-const MIN_POST_WORDS = 1500;
+const MIN_POST_WORDS = 2000;
 
 /**
  * Strip markdown and count words (spaces separate words).

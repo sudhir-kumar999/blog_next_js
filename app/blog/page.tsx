@@ -2,6 +2,7 @@
 // SEO: Server Component – data fetched on server, full HTML in initial response (no client fetch).
 import { supabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
+import SchemaMarkup from "@/components/SchemaMarkup";
 import { SITE_BASE_URL } from "@/lib/site-config";
 import type { Metadata } from "next";
 import AdSenseSlot from "@/components/AdSenseSlot";
@@ -103,14 +104,8 @@ export default async function BlogPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      <SchemaMarkup type="CollectionPage" data={blogJsonLd} />
+      <SchemaMarkup type="BreadcrumbList" data={breadcrumbJsonLd} />
       {/* Breadcrumb Navigation */}
       <nav className="border-b border-zinc-100 bg-zinc-50/50 py-3">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">

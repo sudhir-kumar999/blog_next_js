@@ -67,7 +67,23 @@ function isRetryableFailure(failure: GenerateBlogPostFailure): boolean {
     return true;
   }
   if (failure.kind === "content_blocked") {
-    return /mock-test|interactive quiz|Missing ```mock-test/i.test(failure.reason);
+    const retryableReasons = [
+      "mock-test",
+      "interactive quiz",
+      "Missing ```mock-test",
+      "too_few_headings",
+      "too_much_filler",
+      "too_shallow",
+      "generic_direct_answer",
+      "Need at least 4 FAQ",
+      "Missing ## सीधा जवाब",
+      "no specific data",
+      "generic advice",
+      "Too few H2",
+      "Too short",
+      "filler",
+    ];
+    return retryableReasons.some((r) => failure.reason.includes(r));
   }
   return false;
 }
@@ -337,8 +353,8 @@ async function generateWithModel(
     contents: buildPrompt(compact, slot, materialType),
     config: {
       maxOutputTokens: MAX_OUTPUT_TOKENS,
-      temperature: 0.6,
-      topP: 0.95,
+      temperature: 0.85,
+      topP: 0.92,
       responseMimeType: "application/json",
       responseJsonSchema: {
         type: "object",
@@ -462,13 +478,21 @@ function qualityFailureToMessage(f: PostQualityFailure): string {
     case "sensitive_news":
       return "Sensitive topic — skipped for policy safety";
     case "too_short":
-      return `Too short: ${f.words} words`;
+      return `Too short: ${f.words} words (min ${f.minWords})`;
     case "invalid_title":
       return "Invalid or missing title";
     case "missing_aeo":
       return f.reason;
     case "missing_mock_test":
       return f.reason;
+    case "too_few_headings":
+      return `Too few H2 headings: ${f.count} (min ${f.min})`;
+    case "too_much_filler":
+      return `Too much generic filler content (ratio ${f.ratio})`;
+    case "too_shallow":
+      return f.reason;
+    case "generic_direct_answer":
+      return "Direct answer is generic/auto-generated — not specific enough";
     default:
       return "Content quality check failed";
   }

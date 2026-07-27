@@ -3,6 +3,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
 import { SITE_BASE_URL, SITE_NAME } from "@/lib/site-config";
 import type { Metadata } from "next";
+import SchemaMarkup from "@/components/SchemaMarkup";
 import AdSenseSlot from "@/components/AdSenseSlot";
 import { ADSENSE_SLOTS } from "@/lib/adsense-config";
 import { buildOrganizationJsonLd, buildWebsiteJsonLd, SITE_KEYWORDS } from "@/lib/seo";
@@ -63,14 +64,8 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildWebsiteJsonLd()) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildOrganizationJsonLd()) }}
-      />
+      <SchemaMarkup type="WebSite" data={buildWebsiteJsonLd()} />
+      <SchemaMarkup type="Organization" data={buildOrganizationJsonLd()} />
       {/* Hero */}
       <section className="border-b border-zinc-100 bg-gradient-to-b from-zinc-50 to-white py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">

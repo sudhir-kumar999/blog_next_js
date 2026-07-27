@@ -7,7 +7,10 @@ import Image from "next/image";
 import { supabaseServer } from "@/lib/supabase/server";
 import BlogArticleBody from "@/components/BlogArticleBody";
 import AdSenseSlot from "@/components/AdSenseSlot";
-import { buildFaqPageJsonLd, extractFaqFromContent } from "@/lib/aeo";
+import SchemaMarkup from "@/components/SchemaMarkup";
+import FAQSection from "@/components/FAQSection";
+import KeyTakeaway from "@/components/KeyTakeaway";
+import { extractFaqFromContent, extractDirectAnswer } from "@/lib/aeo";
 import { extractMockTestsFromMarkdown } from "@/lib/mock-test/parse";
 import { buildBreadcrumbJsonLd, buildQuizJsonLd, keywordsForPost } from "@/lib/seo";
 import { ADSENSE_SLOTS } from "@/lib/adsense-config";
@@ -185,7 +188,6 @@ export default async function BlogPostPage({
   const category = Array.isArray(post.categories) ? post.categories[0] : post.categories;
 
   const postUrl = `${baseUrl}/blog/${slug}`;
-  const faqJsonLd = buildFaqPageJsonLd(faqs, postUrl);
   const quizJsonLd =
     mockTests[0] &&
     buildQuizJsonLd({
@@ -245,28 +247,13 @@ export default async function BlogPostPage({
     },
   };
 
+  const directAnswer = extractDirectAnswer(post.content || "");
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      {faqJsonLd ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        />
-      ) : null}
-      {quizJsonLd ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(quizJsonLd) }}
-        />
-      ) : null}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      <SchemaMarkup type="BlogPosting" data={jsonLd} />
+      {quizJsonLd ? <SchemaMarkup type="Quiz" data={quizJsonLd} /> : null}
+      <SchemaMarkup type="BreadcrumbList" data={breadcrumbJsonLd} />
 
       <div className="min-h-screen bg-white">
         {/* Breadcrumb Navigation */}
@@ -395,6 +382,10 @@ export default async function BlogPostPage({
               )}
             </header>
 
+            {directAnswer && (
+              <KeyTakeaway>{directAnswer}</KeyTakeaway>
+            )}
+
             <div itemProp="articleBody">
               <BlogArticleBody content={post.content || ""} />
             </div>
@@ -408,6 +399,10 @@ export default async function BlogPostPage({
             ) : null}
 
           </article>
+
+          {faqs.length > 0 && (
+            <FAQSection items={faqs} pageUrl={postUrl} />
+          )}
 
           {/* Prev/Next post navigation — improves crawl depth and internal links */}
           <nav className="mt-12 border-t border-zinc-200 pt-8" aria-label="Post navigation">

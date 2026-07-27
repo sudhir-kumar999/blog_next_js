@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 
+import SchemaMarkup from "@/components/SchemaMarkup";
 import AdSenseScript from "@/components/AdSenseScript";
 import CookieConsent from "@/components/CookieConsent";
 import Footer from "@/components/Footer";
@@ -69,22 +70,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased bg-white text-zinc-900`}
       >
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebPage",
+        <SchemaMarkup
+          type="WebPage"
+          data={{
+            name: "StudyMitra",
+            description: SITE_DESCRIPTION,
+            url: SITE_BASE_URL,
+            inLanguage: "hi-IN",
+            isPartOf: {
+              "@type": "WebSite",
               name: "StudyMitra",
-              description: SITE_DESCRIPTION,
               url: SITE_BASE_URL,
-              inLanguage: "hi-IN",
-              isPartOf: {
-                "@type": "WebSite",
-                name: "StudyMitra",
-                url: SITE_BASE_URL,
-              },
-            }),
+            },
           }}
         />
 

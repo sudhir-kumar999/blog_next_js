@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import SchemaMarkup from "@/components/SchemaMarkup";
 import {
   CONTACT_EMAIL,
   PUBLISHER_LOCATION,
@@ -37,10 +38,7 @@ export default function PrivacyPolicyPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      <SchemaMarkup type="BreadcrumbList" data={breadcrumbJsonLd} />
       <nav className="border-b border-zinc-100 bg-zinc-50/50 py-3">
         <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
           <ol className="flex items-center gap-2 text-sm text-zinc-600">

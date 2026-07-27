@@ -18,10 +18,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
       {
-        userAgent: "GPTBot",
-        disallow: "/",
-      },
-      {
         userAgent: "Googlebot-News",
         allow: "/",
       },

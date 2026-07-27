@@ -76,6 +76,14 @@ export function hasDirectAnswerBlock(content: string): boolean {
   return /##\s*सीधा जवाब|##\s*Short answer|##\s*Quick answer/i.test(content);
 }
 
+export function extractDirectAnswer(content: string): string | null {
+  const match = content.match(
+    /##\s*(सीधा जवाब|Short answer|Quick answer)\s*\n([\s\S]*?)(?=\n##|\n---|$)/
+  );
+  if (!match) return null;
+  return match[2].trim().replace(/\n+/g, " ").slice(0, 300);
+}
+
 export function extractKeyTermsForAeo(content: string): string[] {
   const terms = new Set<string>();
   const termPatterns = [
