@@ -9,12 +9,42 @@ export const metadata: Metadata = {
   description: `Contact ${SITE_NAME} for corrections, feedback, privacy requests, or general questions.`,
   alternates: { canonical: url },
   robots: { index: true, follow: true },
+  openGraph: {
+    title: `Contact ${SITE_NAME} — Hindi Exam Preparation`,
+    description: `Contact StudyMitra for corrections, feedback, privacy requests, or general questions.`,
+    url,
+    locale: "hi_IN",
+    siteName: SITE_NAME,
+  },
 };
 
 export default function ContactPage() {
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_BASE_URL },
+      { "@type": "ListItem", position: 2, name: "Contact", item: url },
+    ],
+  };
+
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
-      <h1 className="text-3xl font-bold text-zinc-900">Contact</h1>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <nav className="border-b border-zinc-100 bg-zinc-50/50 py-3">
+        <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
+          <ol className="flex items-center gap-2 text-sm text-zinc-600">
+            <li><Link href="/" className="text-blue-600 hover:underline">Home</Link></li>
+            <li>/</li>
+            <li className="text-zinc-800 font-medium">Contact</li>
+          </ol>
+        </div>
+      </nav>
+      <main className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
+        <h1 className="text-3xl font-bold text-zinc-900">Contact</h1>
       <p className="mt-6 text-zinc-600 leading-relaxed">
         {SITE_NAME} par koi sawal, post correction, privacy request, ya partnership query ho to niche
         email par contact karein.
@@ -57,5 +87,6 @@ export default function ContactPage() {
         </ul>
       </div>
     </main>
+    </>
   );
 }

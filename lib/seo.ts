@@ -1,5 +1,5 @@
 import type { MockTestData } from "@/lib/mock-test/types";
-import { SITE_BASE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site-config";
+import { CONTACT_EMAIL, SITE_BASE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site-config";
 
 /** Target Hindi/English keywords per study category (Google Search). */
 export const CATEGORY_SEO: Record<
@@ -88,7 +88,19 @@ export function buildOrganizationJsonLd() {
     url: SITE_BASE_URL,
     logo: `${SITE_BASE_URL}/icon.svg`,
     description: SITE_DESCRIPTION,
-    sameAs: [] as string[],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: CONTACT_EMAIL,
+      url: `${SITE_BASE_URL}/contact`,
+    },
+    sameAs: [
+      `https://www.facebook.com/studymitra`,
+      `https://twitter.com/studymitra`,
+      `https://www.instagram.com/studymitra`,
+      `https://www.linkedin.com/company/studymitra`,
+      `https://www.youtube.com/@studymitra`,
+    ].filter(Boolean),
   };
 }
 

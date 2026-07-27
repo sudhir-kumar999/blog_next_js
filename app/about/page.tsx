@@ -10,12 +10,66 @@ export const metadata: Metadata = {
     "StudyMitra is a Hindi study-material blog for competitive and board exams — notes, MCQs, mock tests, and vacancy guides.",
   alternates: { canonical: url },
   robots: { index: true, follow: true },
+  openGraph: {
+    title: "About StudyMitra — Hindi Exam Preparation",
+    description:
+      "StudyMitra provides free Hindi study material: notes, practice questions, mock tests, and vacancy guides for SSC, Railway, NEET, UPSC.",
+    url,
+    locale: "hi_IN",
+    siteName: SITE_NAME,
+  },
 };
 
 export default function AboutPage() {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_BASE_URL,
+    description: "Free Hindi study material for competitive and board exams.",
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: CONTACT_EMAIL,
+      url: `${SITE_BASE_URL}/contact`,
+    },
+    sameAs: [
+      `https://www.facebook.com/studymitra`,
+      `https://twitter.com/studymitra`,
+      `https://www.instagram.com/studymitra`,
+    ].filter(Boolean),
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_BASE_URL },
+      { "@type": "ListItem", position: 2, name: "About", item: url },
+    ],
+  };
+
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
-      <h1 className="text-3xl font-bold text-zinc-900">About {SITE_NAME}</h1>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <nav className="border-b border-zinc-100 bg-zinc-50/50 py-3">
+        <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
+          <ol className="flex items-center gap-2 text-sm text-zinc-600">
+            <li><Link href="/" className="text-blue-600 hover:underline">Home</Link></li>
+            <li>/</li>
+            <li className="text-zinc-800 font-medium">About</li>
+          </ol>
+        </div>
+      </nav>
+      <main className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
+        <h1 className="text-3xl font-bold text-zinc-900">About {SITE_NAME}</h1>
 
       <div className="mt-8 space-y-6 text-zinc-600 leading-relaxed">
         <p>
@@ -77,5 +131,6 @@ export default function AboutPage() {
         </section>
       </div>
     </main>
+    </>
   );
 }

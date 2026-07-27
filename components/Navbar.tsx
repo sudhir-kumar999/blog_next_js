@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { STUDY_NAV_CATEGORIES } from "@/lib/study-nav";
@@ -13,10 +14,13 @@ interface Category {
 }
 
 export default function Navbar() {
+  const pathname = usePathname();
   const { isLoggedIn, user, role, logout, loading } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [openCat, setOpenCat] = useState(false);
   const [openMobile, setOpenMobile] = useState(false);
+
+  const isActive = (path: string) => pathname === path;
 
   // 🔹 Fetch categories
   useEffect(() => {
@@ -80,9 +84,11 @@ export default function Navbar() {
 
             {/* ================= DESKTOP NAV ================= */}
             <div className="hidden items-center gap-8 md:flex">
-              <Link 
-                href="/blog" 
+              <Link
+                href="/blog"
                 className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
+                aria-label="Blog — all Hindi study material posts"
+                aria-current={isActive("/blog") ? "page" : undefined}
               >
                 Blog
               </Link>
@@ -95,6 +101,8 @@ export default function Navbar() {
                     setOpenCat(!openCat);
                   }}
                   className="flex items-center gap-1 text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
+                  aria-label="Study material categories"
+                  aria-expanded={openCat}
                 >
                   Study material
                   <svg 
@@ -123,15 +131,19 @@ export default function Navbar() {
                 )}
               </div>
 
-              <Link 
-                href="/about" 
+              <Link
+                href="/about"
                 className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
+                aria-label="About StudyMitra"
+                aria-current={isActive("/about") ? "page" : undefined}
               >
                 About
               </Link>
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900"
+                aria-label="Contact StudyMitra"
+                aria-current={isActive("/contact") ? "page" : undefined}
               >
                 Contact
               </Link>

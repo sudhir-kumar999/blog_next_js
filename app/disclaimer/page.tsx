@@ -9,12 +9,42 @@ export const metadata: Metadata = {
   description: `Educational disclaimer for ${SITE_NAME} — accuracy, vacancies, and third-party ads.`,
   alternates: { canonical: url },
   robots: { index: true, follow: true },
+  openGraph: {
+    title: `Disclaimer — ${SITE_NAME}`,
+    description: `Educational disclaimer for StudyMitra regarding accuracy, vacancies, and third-party ads.`,
+    url,
+    locale: "hi_IN",
+    siteName: SITE_NAME,
+  },
 };
 
 export default function DisclaimerPage() {
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_BASE_URL },
+      { "@type": "ListItem", position: 2, name: "Disclaimer", item: url },
+    ],
+  };
+
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24 text-zinc-700">
-      <h1 className="text-3xl font-bold text-zinc-900">Disclaimer</h1>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <nav className="border-b border-zinc-100 bg-zinc-50/50 py-3">
+        <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
+          <ol className="flex items-center gap-2 text-sm text-zinc-600">
+            <li><Link href="/" className="text-blue-600 hover:underline">Home</Link></li>
+            <li>/</li>
+            <li className="text-zinc-800 font-medium">Disclaimer</li>
+          </ol>
+        </div>
+      </nav>
+      <main className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24 text-zinc-700">
+        <h1 className="text-3xl font-bold text-zinc-900">Disclaimer</h1>
 
       <div className="mt-10 space-y-8 text-zinc-600 leading-relaxed">
         <p>
@@ -82,5 +112,6 @@ export default function DisclaimerPage() {
         </p>
       </div>
     </main>
+    </>
   );
 }

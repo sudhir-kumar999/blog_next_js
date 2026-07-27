@@ -13,16 +13,24 @@ import { SITE_KEYWORDS } from "@/lib/seo";
 
 const blogUrl = `${SITE_BASE_URL}/blog`;
 export const metadata: Metadata = {
-  title: "Exam Blog Hindi — Mock Test, Notes, MCQ, Vacancy 2026",
+  title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests, Vacancy 2026",
   description:
     "Latest Hindi exam blog: online mock test, SSC/Railway/NEET/UPSC notes, interactive MCQ practice, and government vacancy updates on StudyMitra.",
   keywords: SITE_KEYWORDS,
   alternates: { canonical: blogUrl },
   openGraph: {
     url: blogUrl,
-    title: "Study Material Blog — Notes, MCQs, Mock Tests",
+    title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests, Vacancy 2026",
     description:
       "Latest Hindi study posts: exam notes, practice questions, mock tests, and vacancy guides.",
+    locale: "hi_IN",
+    siteName: "StudyMitra",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests",
+    description:
+      "Latest Hindi study posts: exam notes, practice questions, mock tests, and vacancy guides on StudyMitra.",
   },
   robots: { index: true, follow: true },
 };
@@ -65,14 +73,60 @@ export default async function BlogPage() {
 
   const typedPosts = posts as Post[] | null;
 
+  const blogJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Study Material Blog Hindi — Notes, MCQs, Mock Tests",
+    description:
+      "Latest Hindi exam blog: online mock test, SSC/Railway/NEET/UPSC notes, interactive MCQ practice, and government vacancy updates.",
+    url: blogUrl,
+    inLanguage: "hi-IN",
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: (typedPosts ?? []).slice(0, 20).map((post, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${SITE_BASE_URL}/blog/${post.slug}`,
+        name: post.title,
+      })),
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_BASE_URL },
+      { "@type": "ListItem", position: 2, name: "Study Material Blog Hindi", item: blogUrl },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {/* Breadcrumb Navigation */}
+      <nav className="border-b border-zinc-100 bg-zinc-50/50 py-3">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <ol className="flex items-center gap-2 text-sm text-zinc-600">
+            <li><Link href="/" className="text-blue-600 hover:underline">Home</Link></li>
+            <li>/</li>
+            <li className="text-zinc-800 font-medium">Blog</li>
+          </ol>
+        </div>
+      </nav>
       {/* Hero Section */}
       <section className="border-b border-zinc-100 bg-gradient-to-b from-zinc-50 to-white py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <div className="inline-block">
             <h1 className="bg-gradient-to-r from-black via-zinc-800 to-black bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-6xl">
-              Blog
+              Study Material Blog Hindi
             </h1>
             <div className="mt-2 h-1 w-full bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
           </div>

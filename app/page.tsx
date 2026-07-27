@@ -1,7 +1,7 @@
 // app/page.tsx
 import { supabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
-import { SITE_BASE_URL } from "@/lib/site-config";
+import { SITE_BASE_URL, SITE_NAME } from "@/lib/site-config";
 import type { Metadata } from "next";
 import AdSenseSlot from "@/components/AdSenseSlot";
 import { ADSENSE_SLOTS } from "@/lib/adsense-config";
@@ -10,7 +10,9 @@ import { buildOrganizationJsonLd, buildWebsiteJsonLd, SITE_KEYWORDS } from "@/li
 export const revalidate = 60; // ISR for SEO + fresh content
 
 export const metadata: Metadata = {
-  title: "StudyMitra — Online Mock Test Hindi, Notes, MCQ, Vacancy 2026",
+  title: {
+    absolute: "StudyMitra — Online Mock Test Hindi, Notes, MCQ, Vacancy 2026",
+  },
   description:
     "Free Hindi study material: online mock test with score check, SSC/Railway/NEET/UPSC notes, MCQ practice, and sarkari vacancy details. StudyMitra — exam preparation in Hindi.",
   keywords: SITE_KEYWORDS,
@@ -22,6 +24,22 @@ export const metadata: Metadata = {
       "Interactive online mock test Hindi, exam notes, practice MCQ, and vacancy guides for Indian students.",
     locale: "hi_IN",
     type: "website",
+    siteName: SITE_NAME,
+    images: [
+      {
+        url: `${SITE_BASE_URL}/icon.svg`,
+        width: 512,
+        height: 512,
+        alt: "StudyMitra Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "StudyMitra — Online Mock Test Hindi, Notes, MCQ 2026",
+    description:
+      "Interactive online mock test Hindi, exam notes, practice MCQ, and vacancy guides for Indian students.",
+    images: [`${SITE_BASE_URL}/icon.svg`],
   },
   robots: { index: true, follow: true },
 };

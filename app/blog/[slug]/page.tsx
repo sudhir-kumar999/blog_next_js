@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { supabaseServer } from "@/lib/supabase/server";
 import BlogArticleBody from "@/components/BlogArticleBody";
 import AdSenseSlot from "@/components/AdSenseSlot";
@@ -159,6 +160,26 @@ export default async function BlogPostPage({
     .order("published_at", { ascending: false })
     .limit(4);
 
+  // Prev/Next posts for navigation and crawl depth
+  const [prevPost, nextPost] = await Promise.all([
+    supabaseServer
+      .from("posts")
+      .select("title, slug")
+      .eq("published", true)
+      .lt("published_at", post.published_at)
+      .order("published_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabaseServer
+      .from("posts")
+      .select("title, slug")
+      .eq("published", true)
+      .gt("published_at", post.published_at)
+      .order("published_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
   const faqs = extractFaqFromContent(post.content || "");
   const mockTests = extractMockTestsFromMarkdown(post.content || "");
   const category = Array.isArray(post.categories) ? post.categories[0] : post.categories;
@@ -217,6 +238,10 @@ export default async function BlogPostPage({
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": postUrl,
+    },
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: ["h1", ".blog-content p:first-of-type"],
     },
   };
 
@@ -338,13 +363,18 @@ export default async function BlogPostPage({
               </div>
 
               {post.featured_image ? (
-                <img
-                  src={post.featured_image}
-                  alt={post.title}
-                  className="mt-7 w-full rounded-2xl border border-zinc-200 object-cover shadow-sm"
-                  loading="eager"
-                  itemProp="image"
-                />
+                <div className="relative mt-7 w-full overflow-hidden rounded-2xl border border-zinc-200 shadow-sm">
+                  <Image
+                    src={post.featured_image}
+                    alt={post.title}
+                    width={1200}
+                    height={630}
+                    className="w-full object-cover"
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
+                    itemProp="image"
+                  />
+                </div>
               ) : (
                 <div className="mt-7 overflow-hidden rounded-2xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-white">
                   <div className="p-8 sm:p-10">
@@ -378,6 +408,42 @@ export default async function BlogPostPage({
             ) : null}
 
           </article>
+
+          {/* Prev/Next post navigation — improves crawl depth and internal links */}
+          <nav className="mt-12 border-t border-zinc-200 pt-8" aria-label="Post navigation">
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
+              <div>
+                {prevPost.data ? (
+                  <Link
+                    href={`/blog/${prevPost.data.slug}`}
+                    className="group flex flex-col rounded-xl border border-zinc-200 p-4 transition hover:border-blue-300 hover:shadow-sm"
+                  >
+                    <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                      ← Previous
+                    </span>
+                    <span className="mt-1 text-sm font-semibold text-zinc-900 group-hover:text-blue-600">
+                      {prevPost.data.title}
+                    </span>
+                  </Link>
+                ) : null}
+              </div>
+              <div className="sm:text-right">
+                {nextPost.data ? (
+                  <Link
+                    href={`/blog/${nextPost.data.slug}`}
+                    className="group flex flex-col rounded-xl border border-zinc-200 p-4 transition hover:border-blue-300 hover:shadow-sm"
+                  >
+                    <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                      Next →
+                    </span>
+                    <span className="mt-1 text-sm font-semibold text-zinc-900 group-hover:text-blue-600">
+                      {nextPost.data.title}
+                    </span>
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          </nav>
 
           {/* More articles – internal links help Google index "Crawled - not indexed" pages */}
           {otherPosts && otherPosts.length > 0 && (

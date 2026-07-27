@@ -1,5 +1,3 @@
-// app/layout.tsx
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -7,19 +5,22 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 
 import AdSenseScript from "@/components/AdSenseScript";
+import CookieConsent from "@/components/CookieConsent";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
-import { SITE_BASE_URL, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site-config";
+import { SITE_BASE_URL, SITE_DESCRIPTION } from "@/lib/site-config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -34,6 +35,7 @@ export const metadata: Metadata = {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/icon.svg" }],
   },
+  manifest: "/manifest",
   other: {
     "google-adsense-account": "ca-pub-8512064525174724",
   },
@@ -49,9 +51,50 @@ export default function RootLayout({
 }) {
   return (
     <html lang="hi" className="light">
+      <head>
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="alternate" hrefLang="hi" href={SITE_BASE_URL} />
+        <link rel="alternate" hrefLang="hi-IN" href={SITE_BASE_URL} />
+        <link rel="alternate" hrefLang="x-default" href={SITE_BASE_URL} />
+        <link rel="preconnect" href="https://*.supabase.co" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://*.supabase.co" />
+        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased bg-white text-zinc-900`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebPage",
+              name: "StudyMitra",
+              description: SITE_DESCRIPTION,
+              url: SITE_BASE_URL,
+              inLanguage: "hi-IN",
+              isPartOf: {
+                "@type": "WebSite",
+                name: "StudyMitra",
+                url: SITE_BASE_URL,
+              },
+            }),
+          }}
+        />
+
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[9999] focus:rounded-lg focus:bg-black focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
+        >
+          Skip to main content
+        </a>
+
         <AdSenseScript />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-W2MN41PJ83"
@@ -68,8 +111,11 @@ export default function RootLayout({
 
         <AuthProvider>
           <Navbar />
-          <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+          <div id="main-content" className="flex min-w-0 flex-1 flex-col">
+            {children}
+          </div>
           <Footer />
+          <CookieConsent />
           <Analytics />
         </AuthProvider>
       </body>

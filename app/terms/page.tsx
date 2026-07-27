@@ -9,12 +9,42 @@ export const metadata: Metadata = {
   description: `Terms of use for ${SITE_NAME} — study material, user accounts, and advertising.`,
   alternates: { canonical: url },
   robots: { index: true, follow: true },
+  openGraph: {
+    title: `Terms and Conditions — ${SITE_NAME}`,
+    description: `Terms of use for StudyMitra study material, user accounts, and advertising.`,
+    url,
+    locale: "hi_IN",
+    siteName: SITE_NAME,
+  },
 };
 
 export default function TermsPage() {
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_BASE_URL },
+      { "@type": "ListItem", position: 2, name: "Terms and Conditions", item: url },
+    ],
+  };
+
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24 text-zinc-700">
-      <h1 className="text-3xl font-bold text-zinc-900">Terms &amp; Conditions</h1>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <nav className="border-b border-zinc-100 bg-zinc-50/50 py-3">
+        <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
+          <ol className="flex items-center gap-2 text-sm text-zinc-600">
+            <li><Link href="/" className="text-blue-600 hover:underline">Home</Link></li>
+            <li>/</li>
+            <li className="text-zinc-800 font-medium">Terms &amp; Conditions</li>
+          </ol>
+        </div>
+      </nav>
+      <main className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24 text-zinc-700">
+        <h1 className="text-3xl font-bold text-zinc-900">Terms &amp; Conditions</h1>
       <p className="mt-4 text-sm text-zinc-500">Effective date: {new Date().getFullYear()}-01-01</p>
 
       <div className="mt-10 space-y-8 text-zinc-600 leading-relaxed">
@@ -101,5 +131,6 @@ export default function TermsPage() {
         </section>
       </div>
     </main>
+    </>
   );
 }

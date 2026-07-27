@@ -129,8 +129,56 @@ export default async function CategoryPage({
 
   const { data: posts } = await postsQuery;
 
+  const categoryUrl = `${SITE_BASE_URL}/category/${slug}`;
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_BASE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_BASE_URL}/blog` },
+      { "@type": "ListItem", position: 3, name: seo.h1, item: categoryUrl },
+    ],
+  };
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: seo.title,
+    description: seo.description,
+    url: categoryUrl,
+    inLanguage: "hi-IN",
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: (posts ?? []).slice(0, 20).map((post, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${SITE_BASE_URL}/blog/${post.slug}`,
+        name: post.title,
+      })),
+    },
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
+      {/* Breadcrumb Navigation */}
+      <nav className="border-b border-zinc-100 bg-zinc-50/50 py-3">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <ol className="flex items-center gap-2 text-sm text-zinc-600">
+            <li><Link href="/" className="text-blue-600 hover:underline">Home</Link></li>
+            <li>/</li>
+            <li><Link href="/blog" className="text-blue-600 hover:underline">Blog</Link></li>
+            <li>/</li>
+            <li className="text-zinc-800 font-medium">{seo.h1}</li>
+          </ol>
+        </div>
+      </nav>
       <section className="border-b border-zinc-100 bg-gradient-to-b from-zinc-50 to-white py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h1 className="text-4xl font-bold tracking-tight text-black sm:text-5xl">
@@ -152,9 +200,12 @@ export default async function CategoryPage({
 
       <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         {posts && posts.length > 0 ? (
-          <section className="grid gap-6 sm:grid-cols-2">
-            {posts.map((post) => (
-              <BlogCard key={post.id} post={post} />
+          <section className="grid gap-6 sm:grid-cols-2" itemScope itemType="https://schema.org/ItemList">
+            {posts.map((post, index) => (
+              <div key={post.id} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                <meta itemProp="position" content={String(index + 1)} />
+                <BlogCard post={post} />
+              </div>
             ))}
           </section>
         ) : (
