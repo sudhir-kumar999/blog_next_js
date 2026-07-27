@@ -186,6 +186,7 @@ export default async function BlogPostPage({
   const faqs = extractFaqFromContent(post.content || "");
   const mockTests = extractMockTestsFromMarkdown(post.content || "");
   const category = Array.isArray(post.categories) ? post.categories[0] : post.categories;
+  const isIpcPost = category?.slug === "ipc" || category?.slug === "indian-penal-code";
 
   const postUrl = `${baseUrl}/blog/${slug}`;
   const quizJsonLd =
@@ -224,9 +225,10 @@ export default async function BlogPostPage({
     dateModified: post.updated_at || post.published_at,
     wordCount: wordCount > 0 ? wordCount : undefined,
     author: {
-      "@type": "Organization",
-      name: "Study Mitra",
+      "@type": "Person",
+      name: "StudyMitra Team",
       url: baseUrl,
+      description: "Hindi exam preparation experts — SSC, Railway, NEET, UPSC, Banking",
     },
     publisher: {
       "@type": "Organization",
@@ -328,24 +330,33 @@ export default async function BlogPostPage({
                 {post.title}
               </h1>
 
-              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-600">
-                <time dateTime={post.published_at} className="inline-flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" aria-hidden="true" />
-                  {new Date(post.published_at).toLocaleDateString("en-US", {
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-500">
+                <span>By StudyMitra Team</span>
+                <span aria-hidden="true">·</span>
+                <time dateTime={post.published_at} className="inline-flex items-center gap-1">
+                  Published {new Date(post.published_at).toLocaleDateString("en-US", {
                     month: "long",
                     day: "numeric",
                     year: "numeric",
                   })}
                 </time>
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" aria-hidden="true" />
-                  {readingMinutes} min read
-                </span>
+                {post.updated_at && post.updated_at !== post.published_at && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <time dateTime={post.updated_at} className="inline-flex items-center gap-1">
+                      Updated {new Date(post.updated_at).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </time>
+                  </>
+                )}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400">
+                <span className="inline-flex items-center gap-1">{readingMinutes} min read</span>
                 {wordCount > 0 && (
-                  <span className="inline-flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" aria-hidden="true" />
-                    {wordCount.toLocaleString()} words
-                  </span>
+                  <span className="inline-flex items-center gap-1">{wordCount.toLocaleString()} words</span>
                 )}
               </div>
 
@@ -404,6 +415,18 @@ export default async function BlogPostPage({
             <FAQSection items={faqs} pageUrl={postUrl} />
           )}
 
+          {isIpcPost && (
+            <div className="mt-10 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+              <p className="font-semibold mb-1">Disclaimer (कानूनी अस्वीकरण)</p>
+              <p>
+                यह लेख केवल शैक्षिक और सूचनात्मक उद्देश्यों के लिए है। IPC धाराओं की जानकारी
+                सामान्य ज्ञान के रूप में प्रस्तुत की गई है। किसी भी कानूनी मामले में किसी
+                योग्य वकील या कानूनी विशेषज्ञ से परामर्श लें। StudyMitra इस जानकारी की
+                सटीकता या उपयोगिता के लिए कोई कानूनी दायित्व नहीं लेता है।
+              </p>
+            </div>
+          )}
+
           {/* Prev/Next post navigation — improves crawl depth and internal links */}
           <nav className="mt-12 border-t border-zinc-200 pt-8" aria-label="Post navigation">
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
@@ -439,6 +462,13 @@ export default async function BlogPostPage({
               </div>
             </div>
           </nav>
+
+          <div className="mt-12 border-t border-zinc-200 pt-8 text-xs text-zinc-400">
+            <p>
+              StudyMitra provides free Hindi study material for competitive exams. Our content is
+              regularly reviewed and updated for accuracy. <Link href="/editorial-policy" className="underline hover:text-zinc-600">View editorial policy</Link>.
+            </p>
+          </div>
 
           {/* More articles – internal links help Google index "Crawled - not indexed" pages */}
           {otherPosts && otherPosts.length > 0 && (

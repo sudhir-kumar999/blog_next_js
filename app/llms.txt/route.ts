@@ -28,6 +28,10 @@ Hindi government exam preparation — SSC, Railway, NEET, UPSC, Banking, Police,
 - Vacancy Details: ${SITE_BASE_URL}/category/vacancy-details
 - About: ${SITE_BASE_URL}/about
 - Contact: ${SITE_BASE_URL}/contact
+- Privacy Policy: ${SITE_BASE_URL}/privacy-policy
+- Terms: ${SITE_BASE_URL}/terms
+- Disclaimer: ${SITE_BASE_URL}/disclaimer
+- Editorial Policy: ${SITE_BASE_URL}/editorial-policy
 
 ## Language
 Hindi (hi-IN), with some English terminology for exam subjects.

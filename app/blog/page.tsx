@@ -8,30 +8,39 @@ import type { Metadata } from "next";
 import AdSenseSlot from "@/components/AdSenseSlot";
 import { ADSENSE_SLOTS } from "@/lib/adsense-config";
 
-export const revalidate = 60; // ISR: revalidate every 60s; no client-side data fetch.
+export const revalidate = 3600;
 
 import { SITE_KEYWORDS } from "@/lib/seo";
 
 const blogUrl = `${SITE_BASE_URL}/blog`;
 export const metadata: Metadata = {
-  title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests, Vacancy 2026",
+  title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests",
   description:
     "Latest Hindi exam blog: online mock test, SSC/Railway/NEET/UPSC notes, interactive MCQ practice, and government vacancy updates on StudyMitra.",
   keywords: SITE_KEYWORDS,
   alternates: { canonical: blogUrl },
   openGraph: {
     url: blogUrl,
-    title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests, Vacancy 2026",
+    title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests",
     description:
       "Latest Hindi study posts: exam notes, practice questions, mock tests, and vacancy guides.",
     locale: "hi_IN",
     siteName: "StudyMitra",
+    images: [
+      {
+        url: `${SITE_BASE_URL}/api/og?title=Study%20Material%20Blog%20Hindi&type=website`,
+        width: 1200,
+        height: 630,
+        alt: "Study Material Blog Hindi",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests",
     description:
       "Latest Hindi study posts: exam notes, practice questions, mock tests, and vacancy guides on StudyMitra.",
+    images: [`${SITE_BASE_URL}/api/og?title=Study%20Material%20Blog%20Hindi&type=website`],
   },
   robots: { index: true, follow: true },
 };
@@ -70,9 +79,10 @@ export default async function BlogPage() {
       )
     `)
     .eq("published", true)
-    .order("published_at", { ascending: false });
+    .order("published_at", { ascending: false })
+    .limit(50);
 
-  const typedPosts = posts as Post[] | null;
+  const typedPosts = (posts as Post[] | null)?.filter((p) => p.slug && p.title) ?? null;
 
   const blogJsonLd = {
     "@context": "https://schema.org",

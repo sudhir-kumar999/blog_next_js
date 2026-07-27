@@ -96,7 +96,7 @@ renderer.image = ({ href, text }) => {
   const src = href?.trim() ?? "";
   if (!/^https?:\/\//i.test(src)) return "";
   const safeAlt = String(text ?? "").replace(/"/g, "&quot;");
-  return `<img src="${src}" alt="${safeAlt}" loading="lazy" class="rounded-lg my-6" />`;
+  return `<div class="relative my-6 w-full" style="aspect-ratio:16/9;max-width:100%"><img src="${src}" alt="${safeAlt}" loading="lazy" class="absolute inset-0 h-full w-full rounded-lg object-contain" /></div>`;
 };
 
 /* ---------------- LINK ---------------- */

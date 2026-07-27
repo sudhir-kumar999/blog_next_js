@@ -10,7 +10,7 @@ import { SITE_BASE_URL } from "@/lib/site-config";
 import { STUDY_NAV_CATEGORIES } from "@/lib/study-nav";
 import { categorySeo } from "@/lib/seo";
 
-export const revalidate = 60; // ISR – SEO friendly
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 /* ======================================================
@@ -78,6 +78,20 @@ export async function generateMetadata({
       type: "website",
       url,
       locale: "hi_IN",
+      images: [
+        {
+          url: `${SITE_BASE_URL}/api/og?title=${encodeURIComponent(seo.title.slice(0, 80))}&type=category`,
+          width: 1200,
+          height: 630,
+          alt: seo.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.title,
+      description: seo.description,
+      images: [`${SITE_BASE_URL}/api/og?title=${encodeURIComponent(seo.title.slice(0, 80))}&type=category`],
     },
   };
 }
@@ -122,7 +136,8 @@ export default async function CategoryPage({
       )
     `)
     .eq("published", true)
-    .order("published_at", { ascending: false });
+    .order("published_at", { ascending: false })
+    .limit(50);
 
   if (category?.id) {
     postsQuery = postsQuery.eq("category_id", category.id);

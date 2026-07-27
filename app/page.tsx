@@ -8,14 +8,14 @@ import AdSenseSlot from "@/components/AdSenseSlot";
 import { ADSENSE_SLOTS } from "@/lib/adsense-config";
 import { buildOrganizationJsonLd, buildWebsiteJsonLd, SITE_KEYWORDS } from "@/lib/seo";
 
-export const revalidate = 60; // ISR for SEO + fresh content
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: {
-    absolute: "StudyMitra — Online Mock Test Hindi, Notes, MCQ, Vacancy 2026",
+    absolute: "StudyMitra — Online Mock Test Hindi, Notes, MCQ 2026",
   },
   description:
-    "Free Hindi study material: online mock test with score check, SSC/Railway/NEET/UPSC notes, MCQ practice, and sarkari vacancy details. StudyMitra — exam preparation in Hindi.",
+    "Free Hindi study material: online mock test, SSC/Railway/NEET/UPSC notes, MCQ practice, and sarkari vacancy details — StudyMitra.",
   keywords: SITE_KEYWORDS,
   alternates: { canonical: SITE_BASE_URL },
   openGraph: {
@@ -28,10 +28,10 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     images: [
       {
-        url: `${SITE_BASE_URL}/icon.svg`,
-        width: 512,
-        height: 512,
-        alt: "StudyMitra Logo",
+        url: `${SITE_BASE_URL}/api/og?title=StudyMitra&type=website`,
+        width: 1200,
+        height: 630,
+        alt: "StudyMitra — Online Mock Test Hindi",
       },
     ],
   },
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     title: "StudyMitra — Online Mock Test Hindi, Notes, MCQ 2026",
     description:
       "Interactive online mock test Hindi, exam notes, practice MCQ, and vacancy guides for Indian students.",
-    images: [`${SITE_BASE_URL}/icon.svg`],
+    images: [`${SITE_BASE_URL}/api/og?title=StudyMitra&type=website`],
   },
   robots: { index: true, follow: true },
 };
@@ -50,7 +50,8 @@ export default async function Home() {
     .from("posts")
     .select("id, title, slug, excerpt, published_at, created_at")
     .eq("published", true)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (error) {
     return (

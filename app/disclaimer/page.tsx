@@ -16,6 +16,12 @@ export const metadata: Metadata = {
     url,
     locale: "hi_IN",
     siteName: SITE_NAME,
+    images: [{ url: `${SITE_BASE_URL}/api/og?title=Disclaimer%20-%20StudyMitra&type=website`, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Disclaimer — ${SITE_NAME}`,
+    images: [`${SITE_BASE_URL}/api/og?title=Disclaimer%20-%20StudyMitra&type=website`],
   },
 };
 

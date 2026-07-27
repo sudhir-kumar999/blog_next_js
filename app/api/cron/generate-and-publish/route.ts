@@ -151,6 +151,7 @@ export async function GET(req: Request) {
       category_id: categoryId,
       published: true,
       published_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     });
 
     if (insertError) {

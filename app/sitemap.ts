@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ?.filter((post) => post.slug && safeSlug(post.slug).length > 0)
         .map((post) => ({
           url: `${baseUrl}/blog/${safeSlug(post.slug)}`,
-          lastModified: new Date(post.updated_at || Date.now()),
+          lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
           changeFrequency: "weekly" as const,
           priority: 0.8,
         })) ?? [];

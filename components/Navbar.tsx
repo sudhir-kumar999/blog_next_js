@@ -116,7 +116,7 @@ export default function Navbar() {
                 </button>
 
                 {openCat && (
-                  <div className="absolute left-0 z-[60] mt-3 w-56 animate-fadeIn rounded-xl border border-zinc-200 bg-white p-2 shadow-lg">
+                  <div className="absolute left-0 z-[60] mt-3 w-56 animate-navFadeIn rounded-xl border border-zinc-200 bg-white p-2 shadow-lg">
                     {navCategories.map((cat) => (
                       <Link
                         key={cat.slug}
@@ -339,32 +339,7 @@ export default function Navbar() {
         </>
       )}
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-        .animate-slideIn {
-          animation: slideIn 0.3s ease-out;
-        }
-      `}</style>
+
     </>
   );
 }

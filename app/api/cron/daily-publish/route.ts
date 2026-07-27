@@ -64,6 +64,7 @@ export async function GET(req: Request) {
       category_id: scheduled.category_id ?? null,
       published: true,
       published_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     const { error: insertError } = await supabaseServer.from("posts").insert(insertPayload);

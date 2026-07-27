@@ -153,7 +153,15 @@ CONTENT DEPTH (thin/low-value content REJECT hoga):
 - "सीधा जवाब" wala section GENERIC nahi hona chahiye. Actual answer do topic ke baare mein — koi bhi padh kar samajh jaye.
 - 2-3 specific examples, case studies, ya real-world scenarios include karo.
 - Tables ka use karo jahan comparison ya data ho.
-- Sirf word count achieve karne ke liye mat likho — HAR sentence mein value honi chahiye.`;
+- Sirf word count achieve karne ke liye mat likho — HAR sentence mein value honi chahiye.
+
+IPC / LEGAL CONTENT KE LIYE (topic IPC/kanoon se related ho to):
+- Content mein 2-3 baar doosri related IPC dharayon ka zikr karo (jaise "IPC Dhara 302 mein hatya ki saja ke baare mein yahan padhein")
+- "Yeh bhi padhein" ya "isase related IPC dharayen" type ke natural references do
+- Har major IPC dhara ka ullekh karte waqt uski category batao (sangyeya/asangyeya, bailable/non-bailable, zamaanat)
+- Judiciary cases aur Supreme Court judgments ke references do jahan relevant ho
+- IPC sections ko unke practical examples se connect karo — real life scenarios ke saath
+- Naye BNS 2023 kanun se bhi compare karo agar relevant ho`;
 
   const persona = getPersona();
 

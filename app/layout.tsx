@@ -52,15 +52,10 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="alternate" hrefLang="hi" href={SITE_BASE_URL} />
-        <link rel="alternate" hrefLang="hi-IN" href={SITE_BASE_URL} />
-        <link rel="alternate" hrefLang="x-default" href={SITE_BASE_URL} />
         <link rel="preconnect" href="https://*.supabase.co" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://*.supabase.co" />
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
       </head>
       <body
         className={`${roboto.variable} flex min-h-screen flex-col antialiased bg-white text-zinc-900`}

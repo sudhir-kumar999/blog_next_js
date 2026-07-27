@@ -18,6 +18,12 @@ export const metadata: Metadata = {
     url,
     locale: "hi_IN",
     siteName: SITE_NAME,
+    images: [{ url: `${SITE_BASE_URL}/api/og?title=About%20StudyMitra&type=website`, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About StudyMitra — Hindi Exam Preparation",
+    images: [`${SITE_BASE_URL}/api/og?title=About%20StudyMitra&type=website`],
   },
 };
 
@@ -97,11 +103,30 @@ export default function AboutPage() {
         </section>
 
         <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-zinc-900">Editorial team</h2>
+          <p>
+            {SITE_NAME} ka content <strong>experienced educators aur subject experts</strong> ke
+            guidance mein tayyar kiya jaata hai. Hamari team mein SSC, UPSC aur board exams ke
+            taiyari karane wale teachers aur previous-year rankers shaamil hain. Har article
+            publish se pehle accuracy aur clarity ke liye review kiya jaata hai.
+          </p>
+        </section>
+
+        <section className="space-y-3">
           <h2 className="text-xl font-semibold text-zinc-900">Quality &amp; transparency</h2>
           <p>
             Articles helpful, original, aur exam-focused hone chahiye. Kuch content AI tools se draft
-            ho sakta hai, lekin publish se pehle clarity aur policy checks hote hain. Vacancy ya exam
-            dates hamesha official website par verify karein.
+            ho sakta hai, lekin publish se pehle clarity aur policy checks hote hain. Content ka
+            fact-checking official sources (NCERT, government websites, IPC aini kitaab) se kiya
+            jaata hai.
+          </p>
+          <p>
+            Published dates aur update dates hamesha article ke top par display hoti hain taki
+            readers freshness check kar sakein.
+          </p>
+          <p>
+            Vacancy ya exam dates hamesha official website par verify karein. StudyMitra kisi bhi
+            sarkari yojana ya exam ka aadhikarik prakasak nahi hai.
           </p>
           <p>
             <Link href="/editorial-policy" className="font-medium text-blue-600 hover:underline">

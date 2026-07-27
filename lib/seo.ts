@@ -104,11 +104,15 @@ export function buildOrganizationJsonLd() {
     url: SITE_BASE_URL,
     logo: `${SITE_BASE_URL}/icon.svg`,
     description: SITE_DESCRIPTION,
+    foundingDate: "2024",
+    inLanguage: "hi-IN",
+    areaServed: "IN",
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
       email: CONTACT_EMAIL,
       url: `${SITE_BASE_URL}/contact`,
+      availableLanguage: ["Hindi", "English"],
     },
     sameAs: [
       `https://www.facebook.com/studymitra`,
@@ -117,6 +121,16 @@ export function buildOrganizationJsonLd() {
       `https://www.linkedin.com/company/studymitra`,
       `https://www.youtube.com/@studymitra`,
     ].filter(Boolean),
+    knowsAbout: [
+      "Hindi exam preparation",
+      "SSC CGL study material",
+      "Railway RRB notes",
+      "NEET UG preparation",
+      "UPSC prelims notes",
+      "Banking exam mock tests",
+      "Indian Penal Code IPC",
+      "Government job vacancies",
+    ],
   };
 }
 
@@ -206,7 +220,7 @@ export function keywordsForPost(options: {
   const slugWords = (options.slug ?? "")
     .split("-")
     .filter((w) => w.length > 2 && !/^\d+$/.test(w));
-  slugWords.slice(0, 6).forEach((w) => set.add(w.replace(/hindi/g, "hindi")));
+  slugWords.slice(0, 6).forEach((w) => set.add(w.toLowerCase()));
 
   if (/mock|test|quiz|mcq/i.test(options.title)) {
     set.add("online mock test hindi");

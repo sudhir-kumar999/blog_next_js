@@ -11,11 +11,17 @@ export const metadata: Metadata = {
   alternates: { canonical: url },
   robots: { index: true, follow: true },
   openGraph: {
-    title: `Contact ${SITE_NAME} — Hindi Exam Preparation`,
+    title: `Contact ${SITE_NAME}`,
     description: `Contact StudyMitra for corrections, feedback, privacy requests, or general questions.`,
     url,
     locale: "hi_IN",
     siteName: SITE_NAME,
+    images: [{ url: `${SITE_BASE_URL}/api/og?title=Contact%20StudyMitra&type=website`, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Contact ${SITE_NAME}`,
+    images: [`${SITE_BASE_URL}/api/og?title=Contact%20StudyMitra&type=website`],
   },
 };
 

@@ -1,6 +1,8 @@
 import type { ContentSegment } from "@/lib/markdown/renderContent";
 import { renderMarkdownContent } from "@/lib/markdown/renderContent";
-import MockTestQuiz from "@/components/MockTestQuiz";
+import dynamic from "next/dynamic";
+
+const MockTestQuiz = dynamic(() => import("@/components/MockTestQuiz"));
 
 const proseClass = `
   prose prose-lg prose-zinc max-w-none
