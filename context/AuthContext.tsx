@@ -9,7 +9,7 @@ import {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/browser";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 type Role = "admin" | "user";
 
@@ -30,7 +30,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -80,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // ❗ ONLY redirect if user was on admin route
           if (pathname?.startsWith("/admin")) {
-            router.replace("/auth/login");
+            window.location.href = "/auth/login";
           }
           return;
         }
@@ -95,12 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const role = profile?.role ?? "user";
         setRole(role);
 
-        // 🔐 Redirect ONLY after login
+        // 🔐 Redirect ONLY after login — use full navigation so middleware picks up cookies
         if (event === "SIGNED_IN") {
-          if (role === "admin") {
-            router.replace("/admin");
-          } else {
-            router.replace("/");
+          const dest = role === "admin" ? "/admin" : "/";
+          if (window.location.pathname !== dest) {
+            window.location.href = dest;
           }
         }
       }
@@ -109,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [router, pathname]);
+  }, [pathname]);
 
   async function logout() {
     if (supabaseBrowser) await supabaseBrowser.auth.signOut();
@@ -117,8 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setRole(null);
 
-    // ❗ logout redirect is OK
-    router.replace("/");
+    window.location.href = "/";
   }
 
   const value: AuthContextType = {

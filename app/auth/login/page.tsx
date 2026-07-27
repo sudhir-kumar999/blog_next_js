@@ -2,31 +2,36 @@
 
 import { requireSupabaseBrowser } from "@/lib/supabase/browser";
 import AuthForm from "@/components/AuthForm";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const router = useRouter();
-
   async function login(email: string, password: string) {
     const db = requireSupabaseBrowser();
-    const { data, error } = await db.auth.signInWithPassword({
+    const { error } = await db.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error || !data.user) {
-      alert(error?.message || "Login failed");
+    if (error) {
+      alert(error.message || "Login failed");
+      return;
+    }
+
+    const { data: { session } } = await db.auth.getSession();
+
+    if (!session) {
+      alert("Session not established. Try again.");
       return;
     }
 
     const { data: profile } = await db
       .from("profiles")
       .select("role")
-      .eq("id", data.user.id)
+      .eq("id", session.user.id)
       .single();
 
-    router.replace(profile?.role === "admin" ? "/admin" : "/");
+    const dest = profile?.role === "admin" ? "/admin" : "/";
+    window.location.href = dest;
   }
 
   return (

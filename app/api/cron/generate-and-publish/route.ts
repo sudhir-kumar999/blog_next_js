@@ -6,6 +6,7 @@ import { getCategoryIdForMaterialType } from "@/lib/category-for-material";
 import { generateBlogPost, parsePostSlot, type PostSlot } from "@/lib/gemini";
 import { slotLabel } from "@/lib/study-material";
 import { supabaseServer } from "@/lib/supabase/server";
+import { SITE_BASE_URL } from "@/lib/site-config";
 
 function projectSuspendedMessage(projectId?: string): string {
   const id = projectId ? ` (project ${projectId})` : "";
@@ -134,6 +135,11 @@ export async function GET(req: Request) {
 
     const categoryId = await getCategoryIdForMaterialType(post.materialType);
 
+    const base = SITE_BASE_URL || "https://www.studymitra.in";
+    const ogTitle = encodeURIComponent(generated.title.slice(0, 80));
+    const ogType = encodeURIComponent(post.materialType);
+    const featured_image = `${base}/api/og?title=${ogTitle}&type=${ogType}`;
+
     const { error: insertError } = await supabaseServer.from("posts").insert({
       title: generated.title,
       slug,
@@ -141,7 +147,7 @@ export async function GET(req: Request) {
       content: generated.content,
       seo_title: generated.seo_title,
       seo_description: generated.seo_description,
-      featured_image: null,
+      featured_image,
       category_id: categoryId,
       published: true,
       published_at: new Date().toISOString(),
