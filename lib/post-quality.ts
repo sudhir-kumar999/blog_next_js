@@ -41,7 +41,7 @@ export function sanitizeSlug(slug: string): string {
   );
 }
 
-/** AI output normalization: SEO fields + embedded FAQ for schema (no manual editing). */
+/** AI output normalization: SEO fields + embedded FAQ + AEO enrichment (no manual editing). */
 export function enrichPostForSeo(
   post: GeneratedPost,
   options?: { materialType?: StudyMaterialType }
@@ -51,6 +51,8 @@ export function enrichPostForSeo(
 
   if (!hasDirectAnswerBlock(content) && post.excerpt) {
     content = `## सीधा जवाब\n${post.excerpt.trim()}\n\n${content}`;
+  } else if (!hasDirectAnswerBlock(content)) {
+    content = `## सीधा जवाब\n${post.title} के बारे में यह पोस्ट विस्तृत जानकारी और तैयारी सामग्री प्रदान करता है। ${options?.materialType === "notes" ? "ये नोट्स परीक्षा की तैयारी के लिए महत्वपूर्ण हैं।" : options?.materialType === "mock-test" ? "इस मॉक टेस्ट से अपनी तैयारी जांचें।" : "यह सामग्री आपकी तैयारी में मदद करेगी।"}\n\n${content}`;
   }
 
   if (faq.length > 0) {
@@ -104,12 +106,22 @@ export function validatePostQuality(
   }
 
   if (!hasDirectAnswerBlock(post.content)) {
-    return { kind: "missing_aeo", reason: "Missing ## सीधा जवाब section" };
+    return { kind: "missing_aeo", reason: "Missing ## सीधा जवाब section for AI visibility" };
   }
 
   const faqCount = post.faq?.length ?? (post.content.match(/\*\*प्रश्न:\*\*/g)?.length ?? 0);
-  if (faqCount < 4) {
-    return { kind: "missing_aeo", reason: "Need at least 4 FAQ items for AEO" };
+  if (faqCount < 6) {
+    return { kind: "missing_aeo", reason: "Need at least 6 FAQ items for AEO (AI visibility), got " + faqCount };
+  }
+
+  const hasBulletOrNumberedList = /(^|\n)[*-]\s|\d+\.\s/.test(post.content);
+  if (!hasBulletOrNumberedList) {
+    return { kind: "missing_aeo", reason: "Content needs bullet points or numbered lists for AI readability" };
+  }
+
+  const hasTableOrCodeBlock = /(\|.+\|.+\||```)/.test(post.content);
+  if (!hasTableOrCodeBlock) {
+    return { kind: "missing_aeo", reason: "Content needs at least one table or code block for AI structure" };
   }
 
   if (options?.materialType === "mock-test" || options?.materialType === "questions") {

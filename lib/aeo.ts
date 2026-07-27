@@ -75,3 +75,59 @@ export function buildFaqPageJsonLd(faqs: FaqItem[], pageUrl: string) {
 export function hasDirectAnswerBlock(content: string): boolean {
   return /##\s*सीधा जवाब|##\s*Short answer|##\s*Quick answer/i.test(content);
 }
+
+export function extractKeyTermsForAeo(content: string): string[] {
+  const terms = new Set<string>();
+  const termPatterns = [
+    /\b(HTML|CSS|JavaScript|Python|Java|C\+\+|React|Node|SQL|DBMS|API)\b/gi,
+    /\b(SSC|NEET|UPSC|RRB|IBPS|CTET|REET)\b/gi,
+    /\b(grammar|tense|vocabulary|syntax|alankar|samas|sandhi)\b/gi,
+  ];
+  for (const pattern of termPatterns) {
+    const matches = content.match(pattern);
+    matches?.forEach((m) => terms.add(m.toLowerCase()));
+  }
+  return [...terms].slice(0, 10);
+}
+
+export function buildAeoCompatibilityScore(content: string): {
+  score: number;
+  features: string[];
+  missing: string[];
+} {
+  const features: string[] = [];
+  const missing: string[] = [];
+
+  if (hasDirectAnswerBlock(content)) {
+    features.push("direct_answer_block");
+  } else {
+    missing.push("direct_answer_block");
+  }
+
+  const faqs = extractFaqFromContent(content);
+  if (faqs.length >= 4) {
+    features.push(`faq_section_${faqs.length}_pairs`);
+  } else {
+    missing.push(`faq_section_min_4_pairs_got_${faqs.length}`);
+  }
+
+  const hasLists = /\n[-*]\s/.test(content);
+  if (hasLists) features.push("bullet_lists");
+  else missing.push("bullet_lists");
+
+  const hasTables = /\|.+\|.+\|/.test(content);
+  if (hasTables) features.push("tables");
+  else missing.push("tables");
+
+  const hasHeadings = content.match(/^##\s/m);
+  if (hasHeadings && hasHeadings.length >= 3) features.push("headings_structure");
+  else missing.push("more_headings_needed");
+
+  const wordCount = content.split(/\s+/).length;
+  if (wordCount >= 800) features.push("word_count_" + wordCount);
+  else missing.push("word_count_min_800");
+
+  const score = Math.round((features.length / (features.length + missing.length)) * 100);
+
+  return { score, features, missing };
+}

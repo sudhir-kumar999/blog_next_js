@@ -7,9 +7,9 @@ export const CATEGORY_SEO: Record<
   { title: string; description: string; keywords: string[]; h1: string; intro: string }
 > = {
   "study-notes": {
-    title: "Study Notes Hindi — SSC, NEET, UPSC, Railway, Board 2026",
+    title: "Study Notes Hindi — SSC, NEET, UPSC, Railway, Board, IT 2026",
     description:
-      "Free Hindi study notes for SSC CGL, NEET, UPSC, Railway RRB, and Board exams. Syllabus-wise revision, formulas, and short notes on StudyMitra.",
+      "Free Hindi study notes for SSC CGL, NEET, UPSC, Railway RRB, Board exams, Web Development, Programming, English Grammar, and IT jobs. Syllabus-wise revision on StudyMitra.",
     keywords: [
       "study notes hindi",
       "exam notes hindi",
@@ -17,28 +17,32 @@ export const CATEGORY_SEO: Record<
       "neet notes hindi",
       "upsc notes hindi",
       "railway notes hindi",
+      "web development notes hindi",
+      "programming notes hindi",
     ],
-    h1: "Study Notes — Hindi Exam Revision",
-    intro: "SSC, NEET, UPSC, Railway aur Board exams ke liye syllabus-wise Hindi notes.",
+    h1: "Study Notes — Hindi Exam & IT Revision",
+    intro: "SSC, NEET, UPSC, Railway, Board exams, IT aur Programming ke liye syllabus-wise Hindi notes.",
   },
   "practice-questions": {
-    title: "Practice Questions Hindi — MCQ Online Quiz SSC, Railway, NEET",
+    title: "Practice Questions Hindi — MCQ Online Quiz SSC, Railway, IT, English",
     description:
-      "Interactive MCQ practice in Hindi for competitive exams. Online quiz with score check for SSC, Railway, Banking, and NEET preparation.",
+      "Interactive MCQ practice in Hindi for competitive exams, web development, programming, English grammar, and general competition. Online quiz with score check.",
     keywords: [
       "practice questions hindi",
       "mcq hindi",
       "online quiz hindi",
       "ssc mcq practice",
       "exam questions hindi",
+      "web development mcq",
+      "english grammar quiz",
     ],
     h1: "Practice Questions — Online MCQ Hindi",
-    intro: "Interactive MCQ practice — answer on page and check your score instantly.",
+    intro: "Interactive MCQ practice — answer on page and check your score instantly. Competitive exams, IT, English, aur Hindi grammar ke liye.",
   },
   "mock-tests": {
-    title: "Online Mock Test Hindi 2026 — SSC, Railway, NEET, UPSC Free",
+    title: "Online Mock Test Hindi 2026 — SSC, Railway, IT, English, Programming",
     description:
-      "Free online mock test in Hindi with interactive MCQ, True/False, and score check. SSC CGL, RRB NTPC, NEET, UPSC, Banking practice papers on StudyMitra.",
+      "Free online mock test in Hindi with interactive MCQ, True/False, and score check. SSC CGL, RRB NTPC, NEET, UPSC, Web Dev, Python, English Grammar practice papers on StudyMitra.",
     keywords: [
       "online mock test hindi",
       "mock test ssc hindi",
@@ -47,23 +51,29 @@ export const CATEGORY_SEO: Record<
       "upsc mock test hindi",
       "free mock test online",
       "interactive mock test",
+      "web developer mock test",
+      "python mock test hindi",
+      "english grammar mock test",
     ],
     h1: "Online Mock Test Hindi — Interactive Quiz",
-    intro: "Asli exam jaisa interactive mock test — MCQ select karein, score check karein, explanation padhein.",
+    intro: "Asli exam jaisa interactive mock test — MCQ select karein, score check karein, explanation padhein. IT, Programming aur Grammar ke bhi mock tests.",
   },
   "vacancy-details": {
-    title: "Sarkari Vacancy Hindi 2026 — SSC, Railway, UPSC, Banking Bharti",
+    title: "Sarkari Vacancy & IT Jobs Hindi 2026 — SSC, Railway, UPSC, Web Developer",
     description:
-      "Latest government job vacancy details in Hindi: SSC, Railway, UPSC, Banking, Police recruitment — eligibility, dates, and preparation links.",
+      "Latest government job vacancy and IT jobs details in Hindi: SSC, Railway, UPSC, Banking, Police, Web Developer, Software Engineer recruitment — eligibility, dates.",
     keywords: [
       "sarkari vacancy hindi",
       "government job vacancy 2026",
       "ssc vacancy hindi",
       "railway bharti hindi",
       "upsc notification hindi",
+      "it jobs hindi",
+      "web developer vacancy",
+      "software engineer recruitment",
     ],
-    h1: "Vacancy Details — Sarkari Bharti Hindi",
-    intro: "SSC, Railway, UPSC, Banking aur state jobs ki vacancy guide Hindi me.",
+    h1: "Vacancy Details — Sarkari Bharti & IT Jobs Hindi",
+    intro: "SSC, Railway, UPSC, Banking, IT aur Web Developer jobs ki vacancy guide Hindi me.",
   },
 };
 
@@ -78,6 +88,12 @@ export const SITE_KEYWORDS = [
   "rrb mock test hindi",
   "neet mock test hindi",
   "upsc preparation hindi",
+  "web development hindi",
+  "programming notes hindi",
+  "english grammar hindi",
+  "hindi vyakaran notes",
+  "general competition hindi",
+  "it jobs hindi",
 ];
 
 export function buildOrganizationJsonLd() {
@@ -199,6 +215,24 @@ export function keywordsForPost(options: {
   if (/rrb|railway/i.test(options.title)) set.add("rrb mock test hindi");
   if (/neet/i.test(options.title)) set.add("neet mock test hindi");
   if (/upsc/i.test(options.title)) set.add("upsc mock test hindi");
+  if (/web|html|css|javascript|frontend/i.test(options.title)) {
+    set.add("web development hindi");
+  }
+  if (/python|java|c\+\+|programming|coding/i.test(options.title)) {
+    set.add("programming notes hindi");
+  }
+  if (/english|grammar|tense|vocabulary/i.test(options.title)) {
+    set.add("english grammar hindi");
+  }
+  if (/hindi|vyakaran|samas|sandhi|alankar/i.test(options.title)) {
+    set.add("hindi vyakaran notes");
+  }
+  if (/general|competition|gk|reasoning/i.test(options.title)) {
+    set.add("general competition hindi");
+  }
+  if (/job|vacancy|recruitment|it jobs|developer|engineer/i.test(options.title)) {
+    set.add("it jobs hindi");
+  }
 
   return [...set].slice(0, 12);
 }

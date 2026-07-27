@@ -52,6 +52,42 @@ const NOTES_TOPICS: TopicSeed[] = [
     hint: "Shortcuts, grammar rules, puzzle types — crisp tables",
     viralAngle: "Interview se pehle revision pack",
   },
+  {
+    category: "Web Development — HTML, CSS, JavaScript नोट्स",
+    keywords: "web development notes Hindi, HTML CSS JavaScript, frontend notes",
+    hint: "Tags, selectors, DOM, flexbox, grid, async JS — topicwise notes",
+    viralAngle: "IT job interview ke liye quick revision",
+  },
+  {
+    category: "Programming Languages — Python, Java, C++ नोट्स",
+    keywords: "programming notes Hindi, Python notes, Java notes, C++ notes",
+    hint: "Syntax, OOP concepts, data structures, common interview questions",
+    viralAngle: "Coding interview ke liye ek jagah sab",
+  },
+  {
+    category: "General English Grammar — Tenses, Articles, Vocabulary नोट्स",
+    keywords: "English grammar notes Hindi, tense rules, vocabulary for exams",
+    hint: "Tense charts, article rules, phrasal verbs, one-word substitution",
+    viralAngle: "Competitive exam English ka complete revision",
+  },
+  {
+    category: "Hindi Grammar — व्याकरण, संधि, समास, अलंकार नोट्स",
+    keywords: "Hindi grammar notes, samas, sandhi, alankar, Hindi vyakaran",
+    hint: "सभी नियम table format में, examples के साथ, exam-focused",
+    viralAngle: "Hindi vyakaran ek hi post mein",
+  },
+  {
+    category: "IT Fundamentals — Computer, Networking, DBMS नोट्स",
+    keywords: "IT fundamentals Hindi, computer notes, DBMS notes, networking",
+    hint: "Computer history, OS, network layers, SQL, normalization",
+    viralAngle: "IT interview ke fundamental questions",
+  },
+  {
+    category: "General Competition — GK, Science, Reasoning, Math नोट्स",
+    keywords: "general competition notes Hindi, GK notes, reasoning notes",
+    hint: "Static GK, science facts, reasoning tricks, math formulas",
+    viralAngle: "Har competitive exam ke liye gen comp revision",
+  },
 ];
 
 const QUESTIONS_TOPICS: TopicSeed[] = [
@@ -90,6 +126,42 @@ const QUESTIONS_TOPICS: TopicSeed[] = [
     keywords: "general science MCQ Hindi, railway science questions",
     hint: "Class 6-10 level GS for Railway, SSC, state exams",
     viralAngle: "Easy marks section — don't skip",
+  },
+  {
+    category: "Web Development — HTML, CSS, JavaScript MCQ प्रश्न",
+    keywords: "web development MCQ Hindi, HTML CSS questions, JS quiz",
+    hint: "Tags, attributes, selectors, DOM events, ES6+ — interview focused",
+    viralAngle: "Frontend interview practice set",
+  },
+  {
+    category: "Python Programming — 30 कोडिंग प्रश्न उत्तर सहित",
+    keywords: "Python MCQ Hindi, Python coding questions, programming quiz",
+    hint: "Data types, functions, OOP, exception handling, list/dict methods",
+    viralAngle: "Python interview crack karo",
+  },
+  {
+    category: "English Grammar — Tenses, Error Detection, Fill Ups",
+    keywords: "English grammar MCQ Hindi, error detection questions, tenses quiz",
+    hint: "Spot the error, fill in blanks, active passive, narration",
+    viralAngle: "English section perfect score tip",
+  },
+  {
+    category: "Hindi Grammar — व्याकरण प्रश्न, वाक्य शुद्धि, अलंकार MCQ",
+    keywords: "Hindi grammar MCQ, Hindi vyakaran questions, samas sandhi quiz",
+    hint: "sandhi, samas, alankar, ras, muhavare — exam pattern questions",
+    viralAngle: "Hindi vyakaran mein pakke marks",
+  },
+  {
+    category: "General Competition — GK, Reasoning, Math मिक्स प्रश्न",
+    keywords: "general competition MCQ, GK questions Hindi, reasoning quiz",
+    hint: "Mixed 30 MCQs — general knowledge, logical reasoning, quantitative",
+    viralAngle: "Gen comp ka daily practice drill",
+  },
+  {
+    category: "Database & SQL — 25 महत्वपूर्ण प्रश्न",
+    keywords: "SQL questions Hindi, DBMS MCQ, database interview questions",
+    hint: "Joins, normalization, indexes, subqueries, ACID properties",
+    viralAngle: "Database interview ke liye quick prep",
   },
 ];
 
@@ -130,6 +202,42 @@ const MOCK_TEST_TOPICS: TopicSeed[] = [
     hint: "State-wise generic pattern, Hindi GK heavy",
     viralAngle: "Local job dream + practice paper combo",
   },
+  {
+    category: "Web Developer — HTML CSS JavaScript मॉक टेस्ट",
+    keywords: "web developer mock test Hindi, frontend quiz, HTML CSS JS test",
+    hint: "DOM, flexbox, grid, async JS, event loop, promises based MCQ",
+    viralAngle: "Frontend developer job ke liye practice test",
+  },
+  {
+    category: "Python Programmer — कोडिंग मॉक टेस्ट (30 प्रश्न)",
+    keywords: "Python mock test Hindi, Python coding quiz, programmer test",
+    hint: "Python basics to advanced — functions, OOP, modules, file I/O",
+    viralAngle: "Python developer interview ka final mock",
+  },
+  {
+    category: "English Grammar — Complete Mock Test (50 प्रश्न)",
+    keywords: "English grammar mock test, English quiz Hindi, grammar test",
+    hint: "Tenses, articles, prepositions, voice, narration, error spotting",
+    viralAngle: "English section mein full score ka mock",
+  },
+  {
+    category: "Hindi Grammar — पूर्ण मॉक टेस्ट (व्याकरण प्रश्न)",
+    keywords: "Hindi grammar mock test, Hindi vyakaran quiz, samas sandhi test",
+    hint: "sandhi, samas, alankar, ras, ling, vachan, karak — full coverage",
+    viralAngle: "Hindi vyakaran ki taiyari ka aakhri test",
+  },
+  {
+    category: "General Competition — GK, Science, Math, Reasoning मॉक",
+    keywords: "general competition mock test, GK mock Hindi, reasoning quiz",
+    hint: "Mixed subject mock — current affairs, science, math, reasoning",
+    viralAngle: "Gen comp ka final mock paper",
+  },
+  {
+    category: "IT Interview — C++, Java, DBMS, Networking मॉक टेस्ट",
+    keywords: "IT mock test Hindi, C++ quiz, Java MCQ, networking test",
+    hint: "OOP, data structures, SQL queries, OS, networking concepts",
+    viralAngle: "IT company interview ke liye mock test",
+  },
 ];
 
 const VACANCY_TOPICS: TopicSeed[] = [
@@ -168,6 +276,24 @@ const VACANCY_TOPICS: TopicSeed[] = [
     keywords: "REET vacancy Hindi, CTET notification, teacher recruitment",
     hint: "Eligibility, certificate rules, exam dates when known",
     viralAngle: "Teacher job = family celebration framing",
+  },
+  {
+    category: "IT Jobs — Web Developer, Software Engineer भर्ती 2026",
+    keywords: "IT jobs Hindi, web developer vacancy, software engineer recruitment",
+    hint: "Eligibility, skills required, interview process, salary range",
+    viralAngle: "IT career start karne ka complete guide",
+  },
+  {
+    category: "Government IT Jobs — NIC, PSU, Govt IT Officer भर्ती",
+    keywords: "government IT jobs Hindi, NIC recruitment, PSU IT officer",
+    hint: "Technical officer, programmer, IT manager posts in government",
+    viralAngle: "Sarkari IT job ka dream — ek post mein",
+  },
+  {
+    category: "Web Development — Freelancing और Remote Job गाइड",
+    keywords: "web development jobs, freelancing Hindi, remote developer jobs",
+    hint: "Skills needed, portfolio tips, freelance platforms, earning potential",
+    viralAngle: "Ghar baitho web developer bano",
   },
 ];
 

@@ -28,13 +28,16 @@ export const VIRAL_SEO_RULES = QUALITY_SEO_RULES;
 
 /** AEO — Answer Engine / AI Overviews / voice search friendly structure */
 export const AEO_RULES = `
-AEO (Answer Engine Optimization) — MANDATORY:
-- First H2 must be "## सीधा जवाब" with 45-70 words: direct, factual answer to the main student query (no fluff).
-- Use question-style H2s where natural (e.g. "SSC CGL syllabus kya hai?").
+AEO (Answer Engine Optimization) — MANDATORY for AI visibility:
+- First H2 MUST be "## सीधा जवाब" with 50-80 words: direct, factual answer that Google AI Overview, ChatGPT, Gemini, and other AI tools can pick as featured snippet.
+- Use question-style H2s where natural (e.g. "HTML kya hai?", "Python kaise sikhe?", "SSC CGL syllabus kya hai?").
 - FAQ section: minimum 6 pairs using EXACT format:
-  **प्रश्न:** (clear question in Hindi)
-  **उत्तर:** (2-4 helpful sentences)
-- Include one comparison table OR numbered steps list for scanability.
-- Mention exam name + year naturally in intro and सीधा जवाब.
+  **प्रश्न:** (clear question in Hindi — what users ask in search/voice)
+  **उत्तर:** (2-4 helpful sentences with keywords)
+- Include at least one comparison table, code block, or numbered steps list for AI scanability.
+- Mention primary keyword in first 100 words.
+- Use natural keyword variations 3-4x throughout (not stuffing).
 - Also return "faq" JSON array (6-8 items) matching the FAQ section — same text as in content.
+- Bullet points and tables are preferred for AI overview extraction.
+- Include "AI-ready" summary at end with primary keyword.
 `;
