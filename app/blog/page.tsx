@@ -14,14 +14,14 @@ import { SITE_KEYWORDS } from "@/lib/seo";
 
 const blogUrl = `${SITE_BASE_URL}/blog`;
 export const metadata: Metadata = {
-  title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests",
+  title: "Exam Preparation Blog Hindi — Notes, MCQs, Mock Tests",
   description:
-    "Latest Hindi exam blog: online mock test, SSC/Railway/NEET/UPSC notes, interactive MCQ practice, and government vacancy updates on StudyMitra.",
+    "Latest Hindi exam preparation blog: online mock tests, SSC/Railway/NEET/UPSC notes, interactive MCQ practice, and government vacancy updates on StudyMitra.",
   keywords: SITE_KEYWORDS,
   alternates: { canonical: blogUrl },
   openGraph: {
     url: blogUrl,
-    title: "Study Material Blog Hindi — Notes, MCQs, Mock Tests",
+    title: "Exam Preparation Blog Hindi — Notes, MCQs, Mock Tests",
     description:
       "Latest Hindi study posts: exam notes, practice questions, mock tests, and vacancy guides.",
     locale: "hi_IN",

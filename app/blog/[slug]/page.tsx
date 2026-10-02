@@ -207,6 +207,58 @@ export default async function BlogPostPage({
   ]);
   const wordCount = countWords(post.content || "");
   const readingMinutes = Math.max(1, Math.round(wordCount / 220));
+
+  // Fetch related posts (same category, exclude current, limit 4)
+  let relatedPosts: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    published_at: string;
+    categories?: Array<{ name: string; slug: string }> | { name: string; slug: string } | null;
+  }> = [];
+  const categorySlug = category?.slug;
+  if (categorySlug) {
+    const { data: rel } = await supabaseServer
+      .from("posts")
+      .select(`
+        id,
+        title,
+        slug,
+        excerpt,
+        published_at,
+        categories (
+          name,
+          slug
+        )
+      `)
+      .eq("published", true)
+      .neq("slug", slug)
+      .contains("categories", [{ slug: categorySlug }])
+      .order("published_at", { ascending: false })
+      .limit(4);
+    relatedPosts = (rel as typeof relatedPosts) || [];
+  }
+  if (relatedPosts.length === 0) {
+    const { data: rel2 } = await supabaseServer
+      .from("posts")
+      .select(`
+        id,
+        title,
+        slug,
+        excerpt,
+        published_at,
+        categories (
+          name,
+          slug
+        )
+      `)
+      .eq("published", true)
+      .neq("slug", slug)
+      .order("published_at", { ascending: false })
+      .limit(4);
+    relatedPosts = (rel2 as typeof relatedPosts) || [];
+  }
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -413,6 +465,51 @@ export default async function BlogPostPage({
 
           {faqs.length > 0 && (
             <FAQSection items={faqs} pageUrl={postUrl} />
+          )}
+
+          {relatedPosts.length > 0 && (
+            <section className="mt-10 rounded-2xl border border-zinc-200 bg-zinc-50 p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-zinc-900">Related Posts</h2>
+              <p className="mt-2 text-sm text-zinc-600">Similar content you might find helpful.</p>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {relatedPosts.map((rp) => {
+                  const rpDate = rp.published_at;
+                  const rpCat = Array.isArray(rp.categories)
+                    ? rp.categories[0]
+                    : rp.categories;
+                  return (
+                    <article
+                      key={rp.id}
+                      className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <Link href={`/blog/${rp.slug}`} className="focus:outline-none">
+                        <span className="absolute inset-0" aria-hidden="true" />
+                        <h3 className="text-base font-semibold leading-snug text-zinc-900 transition-colors group-hover:text-blue-600 line-clamp-2">
+                          {rp.title}
+                        </h3>
+                        {rp.excerpt && (
+                          <p className="mt-2 line-clamp-2 text-sm text-zinc-600">{rp.excerpt}</p>
+                        )}
+                        <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
+                          <time dateTime={rpDate}>
+                            {new Date(rpDate).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </time>
+                          {rpCat?.name && (
+                            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700">
+                              {rpCat.name}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
           )}
 
           {isIpcPost && (

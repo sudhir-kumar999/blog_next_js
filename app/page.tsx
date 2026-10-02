@@ -12,17 +12,17 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: {
-    absolute: "StudyMitra — Online Mock Test Hindi, Notes, MCQ 2026",
+    absolute: "StudyMitra — Free Hindi Mock Tests, Notes, MCQ Practice 2026",
   },
   description:
-    "Free Hindi study material: online mock test, SSC/Railway/NEET/UPSC notes, MCQ practice, and sarkari vacancy details — StudyMitra.",
+    "Free Hindi study material: online mock tests, SSC/Railway/NEET/UPSC notes, MCQ practice, and sarkari vacancy details — StudyMitra.",
   keywords: SITE_KEYWORDS,
   alternates: { canonical: SITE_BASE_URL },
   openGraph: {
     url: SITE_BASE_URL,
-    title: "StudyMitra — Online Mock Test Hindi, Notes, MCQ 2026",
+    title: "StudyMitra — Free Hindi Mock Tests, Notes, MCQ Practice 2026",
     description:
-      "Interactive online mock test Hindi, exam notes, practice MCQ, and vacancy guides for Indian students.",
+      "Free interactive online mock tests in Hindi, exam notes, MCQ practice, and vacancy guides for Indian exam aspirants.",
     locale: "hi_IN",
     type: "website",
     siteName: SITE_NAME,
@@ -31,15 +31,15 @@ export const metadata: Metadata = {
         url: `${SITE_BASE_URL}/api/og?title=StudyMitra&type=website`,
         width: 1200,
         height: 630,
-        alt: "StudyMitra — Online Mock Test Hindi",
+        alt: "StudyMitra — Free Hindi Mock Tests & Notes",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "StudyMitra — Online Mock Test Hindi, Notes, MCQ 2026",
+    title: "StudyMitra — Free Hindi Mock Tests, Notes, MCQ Practice 2026",
     description:
-      "Interactive online mock test Hindi, exam notes, practice MCQ, and vacancy guides for Indian students.",
+      "Free interactive online mock tests in Hindi, exam notes, MCQ practice, and vacancy guides for Indian exam aspirants.",
     images: [`${SITE_BASE_URL}/api/og?title=StudyMitra&type=website`],
   },
   robots: { index: true, follow: true },

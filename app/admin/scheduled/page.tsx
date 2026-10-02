@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { countWords, MIN_POST_WORDS } from "@/lib/wordCount";
 
 interface ScheduledPost {
@@ -78,7 +78,7 @@ export default function ScheduledPostsPage() {
       .finally(() => setAdding(false));
   }
 
-  const wordCount = useMemo(() => countWords(form.content), [form.content]);
+  const wordCount = countWords(form.content);
   const meetsMinWords = wordCount >= MIN_POST_WORDS;
 
   const pending = posts.filter((p) => !p.is_published);

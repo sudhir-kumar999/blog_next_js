@@ -8,7 +8,7 @@ import { buildPrompt } from "./gemini-prompts";
 export type { PostSlot } from "./study-material";
 export { parsePostSlot } from "./study-material";
 
-const DEFAULT_MODELS = ["gemini-2.5-flash"] as const;
+const DEFAULT_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"] as const;
 const MAX_OUTPUT_TOKENS = 16384;
 const MAX_GENERATION_ATTEMPTS = 2;
 
@@ -114,7 +114,7 @@ function parseGeminiApiError(err: unknown): GenerateBlogPostFailure {
 
   if (status === 429) return { kind: "quota_exceeded" };
 
-  if (status === 404 || /is not found for API version/i.test(sanitized)) {
+  if (status === 404 || /is not found for API version|is no longer available/i.test(sanitized)) {
     return {
       kind: "api_error",
       status: 404,
